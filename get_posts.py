@@ -1,6 +1,8 @@
 import requests,json
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
+from onemilshared.connectors.s3_connector import S3Connector
+from schedule import every, repeat, run_pending
 
 with open('config_file.json', 'r') as f:
   config_data = json.load(f)
@@ -21,10 +23,17 @@ session.mount('http://', adapter)
 session.mount('https://', adapter)
 
 
+def get_posts():
+    response = session.get(f'https://api.oct7.io/posts?sort=created_at.desc&limit={page_size}',headers=headers, timeout=50)
 
-response = session.get(f'https://api.oct7.io/posts?sort=platform.asc&limit={page_size}',headers=headers, timeout=50)
+    if response.status_code == 200:
+        raw_posts = response.text
+        s3 = S3Connector(access_key=config_data['s3']['access_key'], secret_key=config_data['s3']['secret_key'],
+                        input_file='raw_posts.json')
+        p = json.loads(raw_posts)['results']
 
-if response.status_code == 200:
-    print(response.json())
-else:
-    print("FAILED")
+        s3.write_raw_posts(raw_posts)
+        print("SUCCESS")
+    else:
+        print("FAILED")
+
