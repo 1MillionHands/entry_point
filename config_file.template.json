@@ -1,0 +1,11 @@
+{
+	"page_size": 1000,
+	"s3": {
+		"access_key": "-----",
+		"secret_key": "-----"
+	},
+	"letBotsWorkToekn": "-----",
+	"schedule": {
+		"hours": 12
+	}
+}
