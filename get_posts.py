@@ -3,6 +3,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from onemilshared.connectors.s3_connector import S3Connector
 from schedule import every, repeat, run_pending
+from time import sleep
 
 with open('config_file.json', 'r') as f:
   config_data = json.load(f)
@@ -22,7 +23,7 @@ session = requests.Session()
 session.mount('http://', adapter)
 session.mount('https://', adapter)
 
-
+@repeat(every(config_data['schedule']['hours']).hours)
 def get_posts():
     response = session.get(f'https://api.oct7.io/posts?sort=created_at.desc&limit={page_size}',headers=headers, timeout=50)
 
@@ -37,3 +38,10 @@ def get_posts():
     else:
         print("FAILED")
 
+
+get_posts()
+
+while True:
+    print(f"initating scheduler every {config_data['schedule']['hours']} hours")
+    run_pending()
+    sleep(5)
