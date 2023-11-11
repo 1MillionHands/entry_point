@@ -23,8 +23,9 @@ session = requests.Session()
 session.mount('http://', adapter)
 session.mount('https://', adapter)
 
-@repeat(every(config_data['schedule']['hours']).hours)
+@repeat(every(config_data['schedule']['hours']).seconds)
 def get_posts():
+    print("getting posts")
     response = session.get(f'https://api.oct7.io/posts?sort=created_at.desc&limit={page_size}',headers=headers, timeout=50)
 
     if response.status_code == 200:
@@ -39,9 +40,8 @@ def get_posts():
         print("FAILED")
 
 
-get_posts()
+print(f"initating scheduler every {config_data['schedule']['hours']} hours")
 
 while True:
-    print(f"initating scheduler every {config_data['schedule']['hours']} hours")
     run_pending()
     sleep(5)
