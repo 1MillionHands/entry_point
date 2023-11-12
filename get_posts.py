@@ -1,12 +1,15 @@
 import requests,json
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
+from onemilshared.connectors.s3_connector import S3Connector
+from schedule import every, repeat, run_pending
+from time import sleep
 
 with open('config_file.json', 'r') as f:
   config_data = json.load(f)
 
 headers = {"accept": "application/json",
-           "Cookie": "CF_Authorization=eyJhbGciOiJSUzI1NiIsImtpZCI6ImE3MjQ3ODBmODdmNDY0MmZkYTlhZDM1YjFjYjJkYjBmZjVmMDAyY2JlYzM3MjQyMzY3NDBjZTI0NWJiMGQ4ZmQifQ.eyJhdWQiOlsiMjM4MTAzOWZhYTkxNTdkZTMxZjU1M2U0ZTBhYTQ1OWVlMDY2Mzc1NTgwNzRmM2U2MTA3YWEwNmQ4MmI4MTJkOSJdLCJlbWFpbCI6InYub25lbWlsbGlvbmhhbmRzMUBvY3Q3LmlvIiwiZXhwIjoxNzAxNDU5MDA0LCJpYXQiOjE2OTg4MzEwMDQsIm5iZiI6MTY5ODgzMTAwNCwiaXNzIjoiaHR0cHM6Ly90c3dpbC5jbG91ZGZsYXJlYWNjZXNzLmNvbSIsInR5cGUiOiJhcHAiLCJpZGVudGl0eV9ub25jZSI6InRiU3d2Tk5CeTkycjlVcWsiLCJzdWIiOiI2YzNiNzc0NS03ZjczLTViYjktOTczOS03MTgyM2I5ODExODIiLCJjb3VudHJ5IjoiSUwifQ.FxNh87nvyIicCW732go2RV7Q1Mxzwwq2gUXxpOQgx2S7vWpcx5dLlyl3CDvUDpSfzr9mnlNxAcBEVmPGIL64swR4KEaNS9dQUsXYwPYlnjNeuvHWMdrwNHpzcSxz-HanFHV_C5ujMqJMYScdv01Ub8KRodzovBvFrIqF4zeuZA40dwNgYb34-oNYfZZ61g52CQCiUSF0xoMA5ZZc2C63KVNl7ULS63pPAfeJgMKHgepMiXxgq__vK2ZrGjiY_kc4qhKwQVWzTzJiSHgAqdZCLNbd7lnnrBKFvqyen4gBhf7ykdQQj6gBCHeUQzV9Jz9Dn324PRsnH7XK2OkNeKDGDg"}
+           "Cookie": f"CF_Authorization={config_data['letBotsWorkToekn']}"}
 page_size = config_data.get("page_size")
 
 retry_strategy = Retry(
@@ -20,11 +23,25 @@ session = requests.Session()
 session.mount('http://', adapter)
 session.mount('https://', adapter)
 
+@repeat(every(config_data['schedule']['hours']).hours)
+def get_posts():
+    response = session.get(f'https://api.oct7.io/posts?sort=created_at.desc&limit={page_size}',headers=headers, timeout=50)
+
+    if response.status_code == 200:
+        raw_posts = response.text
+        s3 = S3Connector(access_key=config_data['s3']['access_key'], secret_key=config_data['s3']['secret_key'],
+                        input_file='raw_posts.json')
+        p = json.loads(raw_posts)['results']
+
+        s3.write_raw_posts(raw_posts)
+        print("SUCCESS")
+    else:
+        print("FAILED")
 
 
-response = session.get(f'https://api.oct7.io/posts?sort=platform.asc&limit={page_size}',headers=headers, timeout=50)
+get_posts()
 
-if response.status_code == 200:
-    print(response.json())
-else:
-    print("FAILED")
+while True:
+    print(f"initating scheduler every {config_data['schedule']['hours']} hours")
+    run_pending()
+    sleep(5)
