@@ -1,7 +1,8 @@
 import requests,json
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
-from onemilshared.connectors.s3_connector import S3Connector
+from shared.connectors.s3_connector import S3Connector
+# from shared.connectors.s3_connector import S3Connector
 from schedule import every, repeat, run_pending
 from time import sleep
 

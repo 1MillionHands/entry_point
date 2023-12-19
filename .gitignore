@@ -3,3 +3,4 @@ secrets.encrypted
 config_file.json
 github_secret_key
 .vscode/
+shared
