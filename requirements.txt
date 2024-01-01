@@ -1,2 +1,3 @@
+shared@git+https://git@github.com/1MillionHands/shared.git
 requests
 schedule
