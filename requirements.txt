@@ -1,4 +1,3 @@
 shared@git+ssh://git@github.com/1MillionHands/shared.git
 requests
 schedule
-boto3
