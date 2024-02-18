@@ -10,6 +10,7 @@ import datetime
 from DB_Manager_EP.DB_alchemy import *
 from DB_Manager_EP.utils import *
 from PostAPI import PostAPI
+from LetBotWorks import LetBotWork
 
 HISTORY_IDS = "posts_history_id_list"
 
@@ -42,8 +43,8 @@ session.mount('https://', adapter)
 
 class EntryPoint(object):
 
-    def __init__(self, config):
-        self.postApi = PostAPI(config)
+    def __init__(self, post_api: PostAPI):
+        self.postApi = post_api
 
     @staticmethod
     def upload_to_db(posts):
@@ -178,7 +179,8 @@ def send_messages(post_id_values_to_update, post_history_id_values_to_update):
 
 
 if __name__ == '__main__':
-    ep = EntryPoint(config_data)
+    let_bot = LetBotWork(config_data)
+    ep = EntryPoint(let_bot)
     ep.get_posts()
     while True:
         print(f"initating scheduler every {config_data['schedule']['hours']} hours")
