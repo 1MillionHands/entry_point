@@ -107,9 +107,10 @@ def get_posts():
         print("FAILED")
 
 
-get_posts()
-
-while True:
-    print(f"initating scheduler every {config_data['schedule']['hours']} hours")
-    run_pending()
-    sleep(5)
+if __name__ == '__main__':
+    ep = EntryPoint(config_data)
+    ep.get_posts()
+    while True:
+        print(f"initating scheduler every {config_data['schedule']['hours']} hours")
+        run_pending()
+        sleep(5)
