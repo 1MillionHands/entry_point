@@ -3,3 +3,4 @@ requests
 schedule
 boto3
 sqlalchemy
+psycopg2
