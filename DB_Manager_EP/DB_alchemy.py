@@ -3,8 +3,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 import uuid
-from Data_Service import get_config
+import json
+# from Data_Service import get_config
 from enum import Enum as PythonEnum, auto
+
+with open('config_file.json', 'r') as f:
+  config_data = json.load(f)
 
 # * the name are after preprocess
 POST_HISTORY_VARIABLES = ['num_of_likes', 'num_of_views', 'timestamp', 'scrape_status', 'curr_engagement',
@@ -17,11 +21,11 @@ CREATOR_VARIABLES = ['creator_image', 'name', 'creator_url', 'is_verified', 'cre
 # CREATOR_VARIABLES = ['creator_image', 'name', 'creator_url', 'is_verified']
 
 
-HOST = get_config()['aws_db']['host']
-PORT = get_config()['aws_db']['port']
-DBNAME = get_config()['aws_db']['dbname']
-USER = get_config()['aws_db']['user']
-PASSWORD = get_config()['aws_db']['password']
+HOST = config_data['aws_db']['host']
+PORT = config_data['aws_db']['port']
+DBNAME = config_data['aws_db']['dbname']
+USER = config_data['aws_db']['user']
+PASSWORD = config_data['aws_db']['password']
 # Define the database connection URL
 DATABASE_URL = f'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}'
 # Create a SQLAlchemy engine
