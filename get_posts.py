@@ -63,18 +63,18 @@ class EntryPoint(object):
         except Exception as e:
             print("FAILED", e)
 
-    @repeat(every(config_data['schedule']['hours']).hours)
-    def get_posts(self):
-        url = self.postApi.get_url()
-        response = self.postApi.get_post_information(url)
-        if response.status_code == SUCCESS_RESPONSE:
-            raw_posts = response.text
-            posts = json.loads(raw_posts)['results']
-            self.upload_to_db(posts)
-            self.upload_to_s3(raw_posts)
-            print(SUCCESS)
-        else:
-            print("FAILED", response.status_code)
+@repeat(every(config_data['schedule']['hours']).hours)
+def get_posts(ep: EntryPoint):
+    url = ep.postApi.get_url()
+    response = ep.postApi.get_post_information(url)
+    if response.status_code == SUCCESS_RESPONSE:
+        raw_posts = response.text
+        posts = json.loads(raw_posts)['results']
+        ep.upload_to_db(posts)
+        ep.upload_to_s3(raw_posts)
+        print(SUCCESS)
+    else:
+        print("FAILED", response.status_code)
 
 
 def create_messages_old(post_id_values_to_update, post_history_id_values_to_update):
@@ -141,48 +141,22 @@ def send_messages(post_id_values_to_update, post_history_id_values_to_update):
         response = q.send_message(m)
         print(f"Sent Message: {response['MessageId']}")
 
-#
-# def get_url():
-#     page_size = config_data.get("page_size")
-#     return f'https://api.oct7.io/posts?sort=created_at.desc&limit={page_size}'
 
 
 
 
 
-#
-# def upload_to_db(posts):
-#     posts = match_db_field_names(posts)
-#     posts = preprocess_posts_to_fit_db(posts)
-#     post_id_values_to_update, post_history_id_values_to_update = insert_posts_and_creators_ep(posts)
-#     send_messages(post_id_values_to_update, post_history_id_values_to_update)
 
+def run_scheduler():
+    let_bot = LetBotWork(config_data)
+    ep = EntryPoint(let_bot)
+    get_posts(ep)
 
-# def upload_to_s3(raw_posts):
-#     try:
-#         s3 = S3Connector(access_key=config_data['s3']['access_key'],
-#                          secret_key=config_data['s3']['secret_key'],
-#                          input_file='raw_posts.json')
-#         s3.write_raw_posts(raw_posts)
-#     except Exception as e:
-#         print("FAILED", e)
-
-#
-# def get_headers():
-#     return {"accept": "application/json",
-#             "Cookie": f"CF_Authorization={config_data['letBotsWorkToekn']}"}
-
-#
-# def get_post_information(url):
-#     headers = get_headers()
-#     return session.get(url, headers=headers, timeout=50)
+    while True:
+        print(f"initiating scheduler every {config_data['schedule']['hours']} hours")
+        run_pending()
+        sleep(5)
 
 
 if __name__ == '__main__':
-    let_bot = LetBotWork(config_data)
-    ep = EntryPoint(let_bot)
-    ep.get_posts()
-    while True:
-        print(f"initating scheduler every {config_data['schedule']['hours']} hours")
-        run_pending()
-        sleep(5)
+    run_scheduler()
