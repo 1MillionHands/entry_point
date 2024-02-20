@@ -145,18 +145,26 @@ def send_messages(post_id_values_to_update, post_history_id_values_to_update):
 
 
 
-
-
-def run_scheduler():
+# A wrapper function to pass the EntryPoint to get_posts
+def scheduled_get_posts():
     let_bot = LetBotWork(config_data)
     ep = EntryPoint(let_bot)
     get_posts(ep)
 
+
+
+# Initiates the scheduler
+def run_scheduler():
+    # Schedule the wrapper function instead
+    every(config_data['schedule']['hours']).hours.do(scheduled_get_posts)
+    print(f"Scheduler initiated every {config_data['schedule']['hours']} hours")
+
     while True:
-        print(f"initiating scheduler every {config_data['schedule']['hours']} hours")
         run_pending()
         sleep(5)
 
-
 if __name__ == '__main__':
+    let_bot = LetBotWork(config_data)
+    ep = EntryPoint(let_bot)
+    get_posts(ep)
     run_scheduler()
