@@ -63,7 +63,7 @@ class EntryPoint(object):
         except Exception as e:
             print("FAILED", e)
 
-@repeat(every(config_data['schedule']['hours']).hours)
+# @repeat(every(config_data['schedule']['hours']).hours)
 def get_posts(ep: EntryPoint):
     url = ep.postApi.get_url()
     response = ep.postApi.get_post_information(url)
