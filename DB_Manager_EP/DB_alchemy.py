@@ -324,6 +324,8 @@ class DbService:
             result = connection.execute(sql_to_exec)
         return result
 
+    def update_table(self, table_name, content, headers):
+        pass
 
     def delete_table(self, table_name, content, headers):
         pass
