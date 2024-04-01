@@ -1,11 +1,9 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, text, ForeignKey, Boolean, Float, Enum
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from datetime import datetime
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.sql import text
+from sqlalchemy.orm import sessionmaker
+import table_objects as tbls
 import uuid
 import json
-# from Data_Service import get_config
-from enum import Enum as PythonEnum, auto
 
 with open('config_file.json', 'r') as f:
   config_data = json.load(f)
@@ -20,122 +18,72 @@ CREATOR_HISTORY_VARIABLES = ['owner_post_count', 'owner_follower_count', 'creato
 CREATOR_VARIABLES = ['creator_image', 'name', 'creator_url', 'is_verified', 'creator_id']
 # CREATOR_VARIABLES = ['creator_image', 'name', 'creator_url', 'is_verified']
 
+def create_local_engine(test = False):
+    HOST = config_data['aws_db']['host']
+    PORT = config_data['aws_db']['port']
+    DBNAME = config_data['aws_db']['dbname']
+    SCHEMA = "omh_schema_test" if test else "omh_schema"
+    USER = config_data['aws_db']['user']
+    PASSWORD = config_data['aws_db']['password']
 
-HOST = config_data['aws_db']['host']
-PORT = config_data['aws_db']['port']
-DBNAME = config_data['aws_db']['dbname']
-USER = config_data['aws_db']['user']
-PASSWORD = config_data['aws_db']['password']
-# Define the database connection URL
-DATABASE_URL = f'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}'
-# Create a SQLAlchemy engine
-engine = create_engine(DATABASE_URL, echo=True)
-# Create a session factory
-Session = sessionmaker(bind=engine)
-# Create a base class for declarative models
-Base = declarative_base()
+    # Define the database connection URL
+    DATABASE_URL = f'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?options=-csearch_path%3D{SCHEMA}'
+    # Create a SQLAlchemy engine
+    engine = create_engine(DATABASE_URL)
 
+    return engine
 
-class PlatformType(PythonEnum):
-    LINKEDIN = auto()
-    INSTGRAM = auto()
-    YOUTUBE = auto()
-    TWITTER = auto()
-    FACEBOOK = auto()
-    TIKTOK = auto()
+def get_db(engine):
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+    db = SessionLocal()
+    try:
+      yield db
+    finally:
+      db.close()
 
-# Define the Posts model
-class Post(Base):
-    __tablename__ = 'Post'
+class DbService:
 
-    post_id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-    creator_fk = Column(String, ForeignKey('Creator.creator_id'))
-    publish_date = Column(DateTime, default=datetime(2000, 1, 1))
-    removed_date = Column(DateTime, default=datetime(2000, 1, 1))
-    url = Column(String)
-    location = Column(String, default='')
-    description = Column(String, default='')
-    content = Column(String, default='')
-    type = Column(String, default='')
-    sentiment = Column(String)  # -1 pro Gaza 0 Neutral 1 pro Israel
-    media_url = Column(String, default='')
-    image_url = Column(String, default='')
-    is_live = Column(Boolean, default=True)
-    subtitles_video = Column(String, default='')
-    media_text = Column(String, default='')  # media_text(img/video)
-    video_length = Column(Integer, default=0)  # in seconds
-    media_size = Column(Integer, default=0)  # in MB (platform standartization)
-    num_of_chars = Column(Integer, default=0)
-    num_of_hashtags = Column(Integer, default=0)
-    list_of_topics = Column(String, default='')
-    language = Column(String, default='')
-    date_archive = Column(DateTime, default=datetime(2000, 1, 1))
-    virality_score = Column(Float, default=0)
-    platform_type = Column(Enum(PlatformType))
+    def __init__(self, engine):
+        self.engine = engine
 
 
-class PostHistory(Base):
-    __tablename__ = 'PostHistory'
+    def create_table(self, tbl_obj ):
+        # Check if the table exists
+        if not self.engine.dialect.has_table(self.engine.connect(), tbl_obj.__tablename__):
+            # If the table does not exist, create it
+            # metadata = MetaData()
+            tbl_obj.metadata.create_all(self.engine)
+            # tbl_obj.metadata = metadata  # Associate metadata if not already set
+            # metadata.create_all(self.engine)
+        else:
+            print("Table name already exist in the db")
 
-    post_history_id = Column('postHistory_id', String, primary_key=True, default=str(uuid.uuid4()))
-    post_fk = Column(String, ForeignKey('Post.post_id'))
-    num_of_likes = Column(Integer, default=0)
-    num_of_views = Column(Integer, default=0)
-    timestamp = Column(DateTime, default=datetime(2000, 1, 1))  # last scrape time
-    scrape_status = Column(String, default='unscraped')
-    curr_engagement = Column(Integer, default=0)
-    num_of_comments = Column(Integer, default=0)
-    video_play_count = Column(Integer, default=0)
-    video_view_count = Column(Integer, default=0)
-    volunteer_engagement = Column(Integer, default=0)
-    virality_score = Column(Float, default=0)
+    def create_schema(self, db, schema_name ):
+        # Check if the table exists
+        try:
+            db.execute(text("CREATE SCHEMA " + schema_name))
+            db.commit()
+        except Exception as f:
+            print(f)
 
+    @staticmethod
+    def insert_table(db, tbl_obj, headers):
+        db.bulk_insert_mappings(tbl_obj, headers)
+        db.commit()
 
-class Creator(Base):
-    __tablename__ = 'Creator'
+    def query_table(self, table_name, content, headers):
+        pass
 
-    creator_id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-    name = Column(String, default='no_name')
-    volunteer_engagement = Column(Integer, default=0)
-    num_of_deleted_posts = Column(Integer, default=0)
-    sentiment = Column(Integer, default=0)
-    creator_image = Column(String)
-    creator_url = Column(String, default='')
-    niche = Column(String, default='')
-    geo_location = Column(String, default='')
-    language = Column(String, default='')  # maybe list
-    is_verified = Column(Boolean, default=False)
-    hashtag_list = Column(String, default='')
-    engagement_history = Column(String, default='')
-    last_post_date = Column(DateTime, default=datetime(2000, 1, 1))
+    def delete_table(self, table_name, content, headers):
+        pass
 
+    def update_table(self, table_name, content, headers):
+        pass
 
-class CreatorHistory(Base):
-    __tablename__ = 'CreatorHistory'
-
-    creator_history_id = Column('creatorHistory_id', String, primary_key=True, default=str(uuid.uuid4()))
-    creator_fk = Column(String, ForeignKey('Creator.creator_id'))
-    owner_post_count = Column(Integer, default=0)
-    owner_follower_count = Column(Integer, default=0)
-    creator_score = Column(Integer, default=0)
-
-
-class MetaDataBucket(Base):
-    __tablename__ = 'meta_data_bucket'
-
-    id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-    source_fk = Column(String, ForeignKey('meta_data_sources.id'))
-    date = Column(DateTime)
-    content = Column(String)
-
-
-class MetaDataSources(Base):
-    __tablename__ = 'meta_data_sources'
-
-    id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-    name = Column(String)
-    url = Column(String)
+    def run_query(self):
+        # self.engine.
+        pass
 
 
 def convert_names_in_list(list_, old_column_name, new_column_name):
@@ -185,13 +133,17 @@ def convert_names_in_list(list_, old_column_name, new_column_name):
 
 
 def insert_posts_bulk_ep(session, posts_data_list):
+    # todo: refactor the fun; split it; check its functionalities
+    # It split the posts to post id and post history
+    #
+
     posts_list_not_exist_in_db = []
     posts_list_exist_in_db = []
     # Extract all URLs from the posts_data_list
     urls_to_check = [post_data['url'] for post_data in posts_data_list]
 
     # Query existing posts based on multiple URLs
-    existing_posts = session.query(Post).filter(Post.url.in_(urls_to_check)).all()
+    existing_posts = session.query(tbls.Post).filter(tbls.Post.url.in_(urls_to_check)).all()
     existing_post_urls = {post.url for post in existing_posts}
 
     for post_data in posts_data_list:
@@ -212,14 +164,14 @@ def insert_posts_bulk_ep(session, posts_data_list):
     selected_cols_post_table = [{col: post[col] for col in POST_VARIABLES if col in post} for post in
                                 posts_list_not_exist_in_db]
     # Insert the collection of objects into the database
-    session.bulk_insert_mappings(Post, selected_cols_post_table)
+    session.bulk_insert_mappings(tbls.Post, selected_cols_post_table)
     posts_list_not_exist_in_db = convert_names_in_list(posts_list_not_exist_in_db, 'post_id', 'post_fk')
     concatenated_list = posts_list_not_exist_in_db + posts_list_exist_in_db
 
     selected_cols_post_history_table = [{col: post[col] for col in POST_HISTORY_VARIABLES if col in post} for post in
                                         concatenated_list]
 
-    session.bulk_insert_mappings(PostHistory, selected_cols_post_history_table)
+    session.bulk_insert_mappings(tbls.PostHistory, selected_cols_post_history_table)
 
     post_id_values_to_update = [d['post_fk'] for d in posts_list_not_exist_in_db]
     post_history_id_values_to_update = [d['post_history_id'] for d in posts_data_list]
@@ -229,11 +181,13 @@ def insert_posts_bulk_ep(session, posts_data_list):
 def insert_creators_bulk_ep(session, posts_data_list):
     creators_list_not_exist_in_db = []
     creators_list_exist_in_db = []
-    # Extract all URLs from the posts_data_list
+
+    # Extract all URLs from the posts_data_list (should be part of Let the bot work
     names_to_check = [post_data['name'] for post_data in posts_data_list]
 
     # Query existing posts based on multiple URLs
-    existing_creators = session.query(Creator).filter(Creator.name.in_(names_to_check)).all()
+    # todo: update creator list function (240-257)
+    existing_creators = session.query(tbls.Creator).filter(tbls.Creator.name.in_(names_to_check)).all()
     existing_names = {creator.name for creator in existing_creators}
 
     for post_data in posts_data_list:
@@ -254,13 +208,13 @@ def insert_creators_bulk_ep(session, posts_data_list):
     # Extract only specified columns from each dictionary in posts_data_list
     selected_cols_creators_table = [{col: post[col] for col in CREATOR_VARIABLES if col in post} for post in
                                     creators_list_not_exist_in_db]
-    session.bulk_insert_mappings(Creator, selected_cols_creators_table)
+    session.bulk_insert_mappings(tbls.Creator, selected_cols_creators_table)
     creators_list_not_exist_in_db = convert_names_in_list(creators_list_not_exist_in_db, 'creator_id', 'creator_fk')
     concatenated_list = creators_list_not_exist_in_db + creators_list_exist_in_db
     selected_cols_exist_in_db_hist = [{col: post[col] for col in CREATOR_HISTORY_VARIABLES if col in post} for post in
                                       concatenated_list]
     # Insert the collection of objects into the database
-    session.bulk_insert_mappings(CreatorHistory, selected_cols_exist_in_db_hist)
+    session.bulk_insert_mappings(tbls.CreatorHistory, selected_cols_exist_in_db_hist)
     return posts_data_list
 
 
