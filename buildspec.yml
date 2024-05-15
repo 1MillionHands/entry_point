@@ -1,18 +1,20 @@
 version: 0.2
-
 phases:
   install:
     runtime-versions:
-      java: corretto11
-  pre_build:
+      python: 3.10
     commands:
-      - echo Nothing to do in the pre_build phase...
+      - echo "Installing dependencies..."
+      - pip install -r requirements.txt -t lib
   build:
     commands:
-      - echo Build started on `date`
+      - echo "Zipping deployment package..."
+      - cd lib
+      - zip -r9 ../deployment_package.zip .
+      - cd ..
+      - zip -g deployment_package.zip lambda_function.py
   post_build:
     commands:
-      - echo Build completed on `date`
-artifacts:
-  files:
-    - '**/*'
+      - echo "Updating lambda Function..."
+      - aws lambda update-function-code --function-name getDataFromAPI --zip-file fileb://deployment_package.zip
+      - echo "DONE!!"
