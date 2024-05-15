@@ -4,8 +4,14 @@ phases:
     runtime-versions:
       python: 3.8
     commands:
+      - echo "Creating lib directory..."
+      - mkdir -p lib
+      - echo "Python version:"
+      - python --version
+      - echo "Pip version:"
+      - pip --version
       - echo "Installing dependencies..."
-      - pip install -r requirements.txt -t lib
+      - pip install -r requirements.txt -t lib --verbose
   build:
     commands:
       - echo "Zipping deployment package..."
