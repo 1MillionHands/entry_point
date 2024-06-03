@@ -1,10 +1,9 @@
 # Third-party libraries
 import pandas as pd
-from schedule import every, repeat, run_pending
 
 # Local application/library specific imports
 from DB_Manager_EP.DB_alchemy import create_local_engine, DbService
-from DB_Manager_EP.utils import *
+from utils import *
 from shared.connectors.s3_connector import S3Connector
 from shared.connectors.sqs_connector import SQSConnector
 

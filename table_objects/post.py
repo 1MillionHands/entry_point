@@ -1,15 +1,13 @@
 import uuid
-from time import sleep
 
 # Third-party libraries
 import pandas as pd
-from schedule import every, repeat, run_pending
 
 # Local application/library specific imports
 from DB_Manager_EP.db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory
-from DB_Manager_EP.utils import *
+from utils import *
 from table_objects.table_handler import TableHandler
-from DB_Manager_EP.utils import PostUtils
+from utils import PostUtils
 
 
 class PostHandler(TableHandler):

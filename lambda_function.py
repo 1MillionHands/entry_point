@@ -6,3 +6,6 @@ def lambda_handler(event, context):
         EventHandler().run(event)
     else:
         print("success")
+
+# if __name__ == '__main__':
+#     lambda_handler({'env': 'de'}, '')
