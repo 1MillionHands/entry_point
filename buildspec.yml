@@ -11,21 +11,23 @@ phases:
     commands:
       - echo "Zipping deployment package..."
       - zip -r9 deployment_package.zip lib
+      -
       - echo "Adding db_manager to the deployment package..."
       - if [ -d "DB_Manager_EP" ]; then echo "db_manager directory exists"; else echo "DB_Manager_EP directory does not exist"; fi
       - zip -r9 deployment_package.zip DB_Manager_EP
+
       - echo "Adding table_objects to the deployment package..."
-      - if [ -d "table_objects" ]; then echo "db_manager directory exists"; else echo "table_objects directory does not exist"; fi
+      - if [ -d "table_objects" ]; then echo "table_objects directory exists"; else echo "table_objects directory does not exist"; fi
       - zip -r9 deployment_package.zip table_objects
-      - echo "Adding db_table_objects.py to the deployment package..."
-      - if [ -d "db_table_objects.py" ]; then echo "db_table_objects.py directory exists"; else echo "db_table_objects.py directory does not exist"; fi
-      - zip -g deployment_package.zip db_table_objects.py
+
       - echo "Adding requirements.txt to the deployment package..."
       - if [ -f "requirements.txt" ]; then echo "requirements.txt file exists"; else echo "requirements.txt file does not exist"; fi
       - zip -g deployment_package.zip requirements.txt
+
       - echo "Adding lambda_function.py to the deployment package..."
       - if [ -f "lambda_function.py" ]; then echo "lambda_function.py file exists"; else echo "lambda_function.py file does not exist"; fi
       - zip -g deployment_package.zip lambda_function.py
+
       - echo "Adding events_handler.py to the deployment package..."
       - if [ -f "events_handler.py" ]; then echo "events_handler.py file exists"; else echo "events_handler.py file does not exist"; fi
       - zip -g deployment_package.zip events_handler.py
