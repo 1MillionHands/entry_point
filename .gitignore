@@ -4,3 +4,5 @@ config_file.json
 .vscode/
 test.py
 venv/
+/entry_venv/
+/shared/

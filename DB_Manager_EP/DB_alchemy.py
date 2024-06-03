@@ -1,25 +1,21 @@
 from sqlalchemy import create_engine, MetaData, asc, desc, Column, Integer, String, ForeignKey, inspect, Table
 from sqlalchemy.sql import text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import InvalidRequestError
 import table_objects as tbls
 import uuid
 import json
 import pandas as pd
 import re
+import pandas as pd
+from contextlib import contextmanager
 
-with open('config_file.json', 'r') as f:
+
+with open('DB_Manager_EP/config_file.json', 'r') as f:
   config_data = json.load(f)
+# with open('entry_point/DB_Manager_EP/config_file.json', 'r') as f:
+#   config_data = json.load(f)
 
-# * the name are after preprocess
-POST_HISTORY_VARIABLES = ['num_of_likes', 'num_of_views', 'timestamp', 'scrape_status', 'curr_engagement',
-                          'num_of_comments', 'video_play_count', 'video_view_count', 'virality_score', 'post_fk',
-                          'post_history_id']
-POST_VARIABLES = ['url', 'publish_date', 'location', 'content', 'type', 'media_url', 'image_url', 'sentiment',
-                  'post_id', 'creator_fk', 'platform_type', 'virality_score']
-CREATOR_HISTORY_VARIABLES = ['owner_post_count', 'owner_follower_count', 'creator_fk', 'creator_history_id']
-CREATOR_VARIABLES = ['creator_image', 'name', 'creator_url', 'is_verified', 'creator_id']
-# CREATOR_VARIABLES = ['creator_image', 'name', 'creator_url', 'is_verified']
 
 def create_local_engine(test = False):
     HOST = config_data['aws_db']['host']
@@ -31,13 +27,12 @@ def create_local_engine(test = False):
 
     # Define the database connection URL
     DATABASE_URL = f'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?options=-csearch_path%3D{SCHEMA}'
+    print("Connecting to DB with URL:", DATABASE_URL)
     # Create a SQLAlchemy engine
     engine = create_engine(DATABASE_URL)
 
-    
     return engine
 
-    
 def get_db(engine):
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -51,29 +46,46 @@ class DbService:
 
     def __init__(self, engine):
         self.engine = engine
-        Session = sessionmaker(bind=self.engine)
-        self.session=Session()
+        # Create a session object to interact with the database
+        self.Session = scoped_session(sessionmaker(bind=self.engine))
+        # self.session = Session()
 
+    @contextmanager
+    def get_db(self,):
+        SessionLocal = self.Session()
+
+        try:
+            yield SessionLocal
+            SessionLocal.commit()
+        except Exception as e:
+            SessionLocal.rollback()
+            raise e
+        finally:
+            self.Session.close()
 
     def create_table(self, tbl_obj ):
-        # Check if the table exists
+        import logging
+
+        # logging.basicConfig(level=logging.INFO)
+        # logger = logging.getLogger('sqlalchemy.engine')
+        # logger.setLevel(logging.INFO)
+
         if not self.engine.dialect.has_table(self.engine.connect(), tbl_obj.__tablename__):
-            # If the table does not exist, create it
-            # metadata = MetaData()
             tbl_obj.metadata.create_all(self.engine)
-            # tbl_obj.metadata = metadata  # Associate metadata if not already set
-            # metadata.create_all(self.engine)
         else:
-            print("Table name already exist in the db")
+            print("Table name already exists in the db")
 
     def create_schema(self, db, schema_name ):
         # Check if the table exists
         try:
-            db.execute(text("CREATE SCHEMA " + schema_name))
-            db.commit()
+            self.session.execute(text("CREATE SCHEMA " + schema_name))
+            self.session.commit()
         except Exception as f:
             print(f)
 
+    def insert_table(self, tbl_obj, headers):
+        with self.get_db() as session:
+            session.bulk_insert_mappings(tbl_obj, headers)
     @staticmethod
     def insert_table(db, tbl_obj, headers):
         db.bulk_insert_mappings(tbl_obj, headers)
@@ -173,8 +185,8 @@ class DbService:
         # Return the final DataFrame containing all queried data and list of invalid columns
         return final_df, invalid_columns
 
-           
-    
+
+
 
     def get_table_info(self, table_name, as_df=False):
         """
@@ -266,7 +278,7 @@ class DbService:
                 print()
 
 
- 
+
     def simple_dql(self, sql_statement):
         """
         Execute a simple Data Query Language (DQL) SQL statement against the database using SQLAlchemy.
@@ -284,7 +296,7 @@ class DbService:
         - It extracts the table name from the SQL statement, retrieves the schema from the engine URL,
           and replaces the original table name with the fully qualified table name before execution.
         """
-        
+
         # Define the regular expression pattern to match the table name
         pattern = r'FROM\s+(\w+)\s*'
 
@@ -296,7 +308,7 @@ class DbService:
             table_name = match.group(1)
         else:
             return None
-        
+
         # Getting schema from engine url
         url_string = str(self.engine.url)
         table_schema = re.search(r'search_path%3D(.*?)(%|$)', url_string).group(1)
@@ -305,13 +317,13 @@ class DbService:
         quoted_table_name = f'{table_schema}."{table_name}"'
         sql_to_exec = sql_statement.replace(table_name,quoted_table_name)
         print(sql_to_exec)
-       
+
         with self.engine.connect() as connection:
             if isinstance(sql_to_exec, str):
                 sql_to_exec = text(sql_to_exec)
             result = connection.execute(sql_to_exec)
         return result
-          
+
 
     def delete_table(self, table_name, content, headers):
         pass
@@ -323,7 +335,7 @@ class DbService:
         # self.engine.
         pass
 
-    
+
 
 
 
@@ -402,111 +414,31 @@ def insert_posts_bulk_ep(session, posts_data_list):
             except StopIteration:
                 break
 
-    selected_cols_post_table = [{col: post[col] for col in POST_VARIABLES if col in post} for post in
-                                posts_list_not_exist_in_db]
-    # Insert the collection of objects into the database
-    session.bulk_insert_mappings(tbls.Post, selected_cols_post_table)
-    posts_list_not_exist_in_db = convert_names_in_list(posts_list_not_exist_in_db, 'post_id', 'post_fk')
-    concatenated_list = posts_list_not_exist_in_db + posts_list_exist_in_db
+    def filter_query_table(self, table_class, filter_column, filter_values, distinct = False, to_df = False):
+        with self.get_db() as session:
+            filter_list = [col.in_(vals) for col, vals in zip(filter_column, filter_values)]
+            print(filter_list)
+            query = session.query(table_class).filter(*filter_list)
+            if distinct:
+                query = query.distinct()
 
-    selected_cols_post_history_table = [{col: post[col] for col in POST_HISTORY_VARIABLES if col in post} for post in
-                                        concatenated_list]
-
-    session.bulk_insert_mappings(tbls.PostHistory, selected_cols_post_history_table)
-
-    post_id_values_to_update = [d['post_fk'] for d in posts_list_not_exist_in_db]
-    post_history_id_values_to_update = [d['post_history_id'] for d in posts_data_list]
-    return post_id_values_to_update, post_history_id_values_to_update
-
-
-def insert_creators_bulk_ep(session, posts_data_list):
-    creators_list_not_exist_in_db = []
-    creators_list_exist_in_db = []
-
-    # Extract all URLs from the posts_data_list (should be part of Let the bot work
-    names_to_check = [post_data['name'] for post_data in posts_data_list]
-
-    # Query existing posts based on multiple URLs
-    # todo: update creator list function (240-257)
-    existing_creators = session.query(tbls.Creator).filter(tbls.Creator.name.in_(names_to_check)).all()
-    existing_names = {creator.name for creator in existing_creators}
-
-    for post_data in posts_data_list:
-        post_data['creator_history_id'] = str(uuid.uuid4())
-        if post_data['name'] not in existing_names:
-            post_data['creator_id'] = str(uuid.uuid4())
-            creators_list_not_exist_in_db.append(post_data)
-        else:
-            try:
-                # Get the existing post from the database
-                existing_creator = next(creator for creator in existing_creators if creator.name == post_data['name'])
-                # Add the post_fk field to the existing post
-                post_data['creator_fk'] = existing_creator.creator_id
-                creators_list_exist_in_db.append(post_data)
-            except StopIteration:
-                print(f"Warning: No existing creator found for name {post_data['name']}")
-
-    # Extract only specified columns from each dictionary in posts_data_list
-    selected_cols_creators_table = [{col: post[col] for col in CREATOR_VARIABLES if col in post} for post in
-                                    creators_list_not_exist_in_db]
-    session.bulk_insert_mappings(tbls.Creator, selected_cols_creators_table)
-    creators_list_not_exist_in_db = convert_names_in_list(creators_list_not_exist_in_db, 'creator_id', 'creator_fk')
-    concatenated_list = creators_list_not_exist_in_db + creators_list_exist_in_db
-    selected_cols_exist_in_db_hist = [{col: post[col] for col in CREATOR_HISTORY_VARIABLES if col in post} for post in
-                                      concatenated_list]
-    # Insert the collection of objects into the database
-    session.bulk_insert_mappings(tbls.CreatorHistory, selected_cols_exist_in_db_hist)
-    return posts_data_list
-
-
-
-
-
-def insert_posts_and_creators_ep(posts_data_list):
-    # Create a session
-    session = Session()
-    posts_data_list = insert_creators_bulk_ep(session, posts_data_list)
-    post_id_values_to_update, post_history_id_values_to_update = insert_posts_bulk_ep(session, posts_data_list)
-    # Commit the transaction
-    session.commit()
-    # Close the session
-    session.close()
-    return post_id_values_to_update, post_history_id_values_to_update
-
-# Create the table in the database
-# Base.metadata.create_all(engine)
+            if to_df:
+                df = pd.read_sql(query.statement, self.engine)
+                return df
+            else:
+                results = query.all()
+                return results
 
 
 
 if __name__ == "__main__":
-    from table_objects import Post, Creatort, CreatorHistoryt, PostHistory
+    from DB_Manager_EP.db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory
 
-    eng = create_local_engine()
+    eng = create_local_engine(test='dev')
     ob  = DbService(eng)
-
-    
-    # get_table_info test 
-    # ob.get_table_info(table_name="Post")
-    
-    # query_table_orm test
-    # df = ob.query_table_orm(table_name=Post,  sort=[('type','desc'),('publish_date','asc')],limit=1000)
-    # print(df)
-
-
-
-    # Simple SQL Test:
-    # sql_statement = "SELECT platform_type, COUNT(platform_type) FROM Post GROUP BY 1 HAVING COUNT(platform_type)>1500 ORDER BY COUNT(platform_type) DESC"
-    # sql_statement = """SELECT post_id,
-    #    publish_date,
-    #    url,
-    #    CASE
-    #        WHEN publish_date >= '2022-01-01' THEN 'Published after Jan 1, 2022'
-    #        ELSE 'Published before Jan 1, 2022'
-    #    END AS publish_status
-    # FROM Post
-    # LIMIT 10;"""
-    # result = ob.simple_dql(sql_statement)
-
+    existing_creators = ob.filter_query_table(Creatort, [Creatort.name, Creatort.creator_image], [['Israel','gomaa1130'], ['TWITTER', 'TIKTOK']],to_df=True)
+    # ob.create_table(Post)
+    # self.db_obj.filter_query_table(Creatort, Creatort.name, self.data_df.name, True)
 
 
     # for row in result:
@@ -514,3 +446,6 @@ if __name__ == "__main__":
 
 
 
+
+    # with DbService(eng) as db_service:
+    #     existing_creators = db_service.filter_query_table(Creatort, Creatort.name, ['Israel','gomaa1130'],to_df=True)
