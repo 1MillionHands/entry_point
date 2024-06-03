@@ -32,6 +32,10 @@ phases:
       - if [ -f "events_handler.py" ]; then echo "events_handler.py file exists"; else echo "events_handler.py file does not exist"; fi
       - zip -g deployment_package.zip events_handler.py
 
+      - echo "Adding utils.py to the deployment package..."
+      - if [ -f "utils.py" ]; then echo "utils.py file exists"; else echo "utils.py file does not exist"; fi
+      - zip -g deployment_package.zip utils.py
+
   post_build:
     commands:
       - echo "Updating lambda Function..."
