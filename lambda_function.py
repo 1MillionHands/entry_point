@@ -1,4 +1,6 @@
 from events_handler import EventHandler
+import sys
+sys.path.append('opt/site-packages')
 
 
 def lambda_handler(event, context):
