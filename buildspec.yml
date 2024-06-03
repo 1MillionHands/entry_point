@@ -11,9 +11,20 @@ phases:
     commands:
       - echo "Zipping deployment package..."
       - zip -r9 deployment_package.zip lib
-      - zip -g -r deployment_package.zip db_manager
-      - zip -g -r deployment_package.zip table_object
+      - echo "Adding db_manager to the deployment package..."
+      - if [ -d "db_manager" ]; then echo "db_manager directory exists"; else echo "db_manager directory does not exist"; fi
+      - zip -r9 deployment_package.zip db_manager
+      - echo "Adding table_object to the deployment package..."
+      - if [ -d "table_object" ]; then echo "table_object directory exists"; else echo "table_object directory does not exist"; fi
+      - zip -r9 deployment_package.zip table_object
+      - echo "Adding buildspec.yml to the deployment package..."
+      - if [ -f "buildspec.yml" ]; then echo "buildspec.yml file exists"; else echo "buildspec.yml file does not exist"; fi
+      - zip -g deployment_package.zip buildspec.yml
+      - echo "Adding requirements.txt to the deployment package..."
+      - if [ -f "requirements.txt" ]; then echo "requirements.txt file exists"; else echo "requirements.txt file does not exist"; fi
       - zip -g deployment_package.zip requirements.txt
+      - echo "Adding lambda_function.py to the deployment package..."
+      - if [ -f "lambda_function.py" ]; then echo "lambda_function.py file exists"; else echo "lambda_function.py file does not exist"; fi
       - zip -g deployment_package.zip lambda_function.py
 
   post_build:
