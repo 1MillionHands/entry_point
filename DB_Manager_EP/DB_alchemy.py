@@ -11,9 +11,9 @@ import pandas as pd
 from contextlib import contextmanager
 
 
-with open('DB_Manager_EP/config_file.json', 'r') as f:
+with open('config_file.json', 'r') as f:
   config_data = json.load(f)
-# with open('entry_point/DB_Manager_EP/config_file.json', 'r') as f:
+# with open('DB_Manager_EP/config_file_.json', 'r') as f:
 #   config_data = json.load(f)
 
 

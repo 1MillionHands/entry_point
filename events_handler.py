@@ -6,14 +6,11 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from table_objects.post import PostHandler
 
-with open('DB_Manager_EP/config_file.json', 'r') as f:
-    config_data = json.load(f)
-
-# with open('./DB_Manager_EP/config_file.json', 'r') as f:
+# with open('DB_Manager_EP/config_file_.json', 'r') as f:
 #     config_data = json.load(f)
 
-client = boto3.client('lambda')
-
+with open('config_file.json', 'r') as f:
+    config_data = json.load(f)
 
 class EventHandler:
 
@@ -80,37 +77,11 @@ class EventHandler:
         else:
             raise Exception("No event_name exists")
 
-    # @staticmethod
-    # def validate_table_name(name):
-    #     # todo: check if works well
-    #     import inspect
-    #     # Get all classes defined in the module
-    #     all_classes = inspect.getmembers(tbls, inspect.isclass)
-    #
-    #     # Extract class names
-    #     class_names = [cls[0] == name for cls in all_classes ]
-    #     if any(class_names):
-    #         return name
-    #     else:
-    #         raise ("the name of the table doesn't exist in the table_objects file (non of the classes contain that name)")
 
-    # @repeat(every(config_data['schedule']['hours']).hours)
-    # def get_posts(self):# chage to get_api_data()
-    #     url = self.postApi.get_url()
-    #     response = self.postApi.get_post_information(url)
-    #     if response.status_code == EventHandlerUtils.SUCCESS_RESPONSE:
-    #         # todo: add expections to check response payload to catch failures
-    #         raw_posts = response.text
-    #         posts = json.loads(raw_posts)['results']
-    #         self.upload_to_db(posts)
-    #         self.upload_to_s3(raw_posts)
-    #         print(SUCCESS)
-    #     else:
-    #         print("FAILED", response.status_code)
 
 
 if __name__ == "__main__":
-    # with open('config_file.json', 'r') as f:
+    # with open('config_file_.json', 'r') as f:
     #     config_data = json.load(f)
     #     f.close()
     obj = EventHandler()

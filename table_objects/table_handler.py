@@ -9,7 +9,7 @@ from shared.connectors.sqs_connector import SQSConnector
 
 
 
-with open('DB_Manager_EP/config_file.json', 'r') as f:
+with open('DB_Manager_EP/config_file_.json', 'r') as f:
     config_data = json.load(f)
 
 

@@ -1,0 +1,36 @@
+{
+    "twitter": {
+        "username": "-----",
+        "password": "-----"
+    },
+    "s3": {
+        "access_key": "-----",
+        "secret_key": "-----"
+    },
+    "sqs": {
+        "access_key": "-----",
+        "secret_key": "-----",
+        "queue_url": "-----"
+    },
+    "scraping": {
+        "interval_hours": 10,
+        "interval_minutes": 0,
+        "post_limit": 1500,
+        "debug_mode": false,
+        "max_history_items": 10
+    },
+    "aws_db": {
+        "user":"-----",
+        "password":"-----",
+        "dbname": "-----",
+        "engine":"-----",
+        "host":"-----",
+        "port":5432,
+        "dbInstanceIdentifier":"-----"
+    },
+	"letBotsWorkToekn": "-----",
+	"schedule": {
+		"hours": 12
+	}
+
+}
