@@ -11,10 +11,16 @@ phases:
     commands:
       - echo "Zipping deployment package..."
       - zip -r9 deployment_package.zip lib
-      - zip -g -r deployment_package.zip db_manager
-      - zip -g -r deployment_package.zip table_object
+      - zip -r9 deployment_package.zip DB_Manager_EP
+      - zip -r9 deployment_package.zip table_objects
       - zip -g deployment_package.zip requirements.txt
       - zip -g deployment_package.zip lambda_function.py
+      - zip -g deployment_package.zip events_handler.py
+      - zip -g deployment_package.zip utils.py
+      
+      - echo "Adding config_file.json to the deployment package..."
+      - if [ -f "config_file.json" ]; then echo "config_file.json file exists"; else echo "config_file.json file does not exist"; fi
+      - zip -g deployment_package.zip config_file.json
 
   post_build:
     commands:

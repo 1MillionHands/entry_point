@@ -1,6 +1,6 @@
 secrets.txt
 secrets.encrypted
-config_file.json
+config_file_.json
 .vscode/
 test.py
 venv/

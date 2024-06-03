@@ -6,14 +6,12 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from table_objects.post import PostHandler
 
-# with open('DB_Manager_EP/config_file.json', 'r') as f:
+
+# with open('DB_Manager_EP/config_file_.json', 'r') as f:
 #     config_data = json.load(f)
 
-with open('./DB_Manager_EP/config_file.json', 'r') as f:
+with open('config_file.json', 'r') as f:
     config_data = json.load(f)
-
-client = boto3.client('lambda')
-
 
 class EventHandler:
 
@@ -81,8 +79,9 @@ class EventHandler:
             raise Exception("No event_name exists")
 
 
+
 if __name__ == "__main__":
-    # with open('config_file.json', 'r') as f:
+    # with open('config_file_.json', 'r') as f:
     #     config_data = json.load(f)
     #     f.close()
     obj = EventHandler()

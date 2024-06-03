@@ -11,9 +11,9 @@ import pandas as pd
 from contextlib import contextmanager
 
 
-with open('DB_Manager_EP/config_file.json', 'r') as f:
+with open('config_file.json', 'r') as f:
   config_data = json.load(f)
-# with open('entry_point/DB_Manager_EP/config_file.json', 'r') as f:
+# with open('DB_Manager_EP/config_file_.json', 'r') as f:
 #   config_data = json.load(f)
 
 
@@ -185,6 +185,9 @@ class DbService:
         # Return the final DataFrame containing all queried data and list of invalid columns
         return final_df, invalid_columns
 
+
+
+
     def get_table_info(self, table_name, as_df=False):
         """
         Retrieve information about a table from the database using SQLAlchemy ORM.
@@ -274,6 +277,8 @@ class DbService:
                 print("Nullable:", column["Nullable"])
                 print()
 
+
+                
     def simple_dql(self, sql_statement):
         """
         Execute a simple Data Query Language (DQL) SQL statement against the database using SQLAlchemy.
@@ -318,7 +323,6 @@ class DbService:
                 sql_to_exec = text(sql_to_exec)
             result = connection.execute(sql_to_exec)
         return result
-
 
     def delete_table(self, table_name, content, headers):
         pass
