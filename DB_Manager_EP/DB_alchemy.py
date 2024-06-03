@@ -1,14 +1,15 @@
+from contextlib import contextmanager
 from sqlalchemy import create_engine, MetaData, asc, desc, Column, Integer, String, ForeignKey, inspect, Table
 from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import InvalidRequestError
 import table_objects as tbls
-import uuid
 import json
 import pandas as pd
+import psycopg2
 import re
-import pandas as pd
-from contextlib import contextmanager
+import uuid
+
 
 
 with open('config_file.json', 'r') as f:
@@ -92,41 +93,98 @@ class DbService:
         db.commit()
 
 
-    def query_table_orm(self, table_name, columns=None, chunk_size=10000, limit=None, sort=None):
+    def apply_sorting(self, query, table_name, sort_by):
         """
-    Query data from a table in the database using SQLAlchemy ORM.
+        Apply sorting criteria to the SQLAlchemy query.
 
-    Parameters:
-        - self: Object
-            Instance of the class containing the SQLAlchemy session.
-        - table_name: str
-            Name of the table to query data from.
-        - columns: list of str, optional
-            List of column names to fetch. If None, fetch all columns (default is None).
-        - chunk_size: int, optional
-            Number of rows to fetch per iteration (default is 10,000).
-        - limit: int, optional
-            Maximum number of rows to fetch (default is None, meaning no limit).
-        - sort: list of tuples, optional
-            List of tuples specifying sorting criteria, each tuple containing:
-                - Column name (str)
-                - Sorting order ('asc' or 'desc')
+        Parameters:
+            - query: SQLAlchemy query object
+                Query object to which sorting criteria will be applied.
+            - table_name: SQLAlchemy Table object
+                Table object representing the table being queried.
+            - sort_by: dict
+                Dictionary specifying sorting criteria where keys are column names and values are boolean
+                indicating whether to sort in ascending (True) or descending (False) order.
 
-    Returns:
-        - pandas.DataFrame
-            A DataFrame containing the queried data.
-        - list of str
-            List of invalid column names if any.
+        Returns:
+            - SQLAlchemy query object
+                Query object with sorting criteria applied.
+        """
+        for col_name, asc_order in sort_by.items():
+            if asc_order:
+                query = query.order_by(asc(getattr(table_name, col_name)))
+            else:
+                query = query.order_by(desc(getattr(table_name, col_name)))
+        return query
+    
 
-    Raises:
-        - Exception
-            Any exception that occurs during the query execution.
+    def print_table_info(self, table_info, table_name):
+        """
+        Print the information about a table.
 
-    """
+        Parameters:
+            - table_info: dict
+                The information about the table.
+            - table_name: str
+                The name of the table.
+        """
+        print(f"Data of {table_name} table:")
+        print("\nForeign Keys are:")
+        for fk in table_info["Foreign Keys"]:
+            if fk is not None:
+                print(fk)
+
+        print("\nIndexes are:")
+        if table_info["Indexes"]:
+            for index in table_info["Indexes"]:
+                if index is not None:
+                    print(index)
+        else:
+            print("None")
+
+        print("\nColumns Data:")
+        for i in range(len(table_info["Column Names"])):
+            if table_info["Column Names"][i] is not None:
+                print("Column Name:", table_info["Column Names"][i])
+                print("Column Type:", table_info["Column Types"][i])
+                print("Primary Key:", table_info["Primary Keys"][i])
+                print("Nullable:", table_info["Nullable"][i])
+                print()
+
+
+    def query_table_orm(self, table_name, columns=None, chunk_size=10000, limit=None, sort_by=None):
+        """
+        Query data from a table in the database using SQLAlchemy ORM.
+
+        Parameters:
+            - self: Object
+                Instance of the class containing the SQLAlchemy session.
+            - table_name: str
+                Name of the table to query data from.
+            - columns: list of str, optional
+                List of column names to fetch. If None, fetch all columns (default is None).
+            - chunk_size: int, optional
+                Number of rows to fetch per iteration (default is 10,000).
+            - limit: int, optional
+                Maximum number of rows to fetch (default is None, meaning no limit).
+            - sort_by: dict, optional
+                Dictionary specifying sorting criteria where keys are column names and values are boolean
+                indicating whether to sort in ascending (True) or descending (False) order.
+
+        Returns:
+            - pandas.DataFrame
+                A DataFrame containing the queried data.
+            - list of str
+                List of invalid column names if any.
+
+        Raises:
+            - Exception
+                Any exception that occurs during the query execution.
+        """
         # Initialize offset for pagination
         offset = 0
         # List to store DataFrames fetched in chunks
-        dfs = []
+        res_df = []
         # List to store invalid column names
         invalid_columns = []
         try:
@@ -137,21 +195,14 @@ class DbService:
                     query = self.session.query(table_name)
                 else:
                     # Check if all specified columns exist
-                    for col in columns:
-                        if not hasattr(table_name, col):
-                            invalid_columns.append(col)
+                    invalid_columns = [col for col in columns if not hasattr(table_name, col)]
                     valid_columns = [col for col in columns if col not in invalid_columns]
                     if invalid_columns:
                         print(f"Invalid column(s): {', '.join(invalid_columns)}")
                     query = self.session.query(*[getattr(table_name, col) for col in valid_columns])
                 # Apply sorting if specified
-                if sort is not None:
-                    for sort_option in sort:
-                        # Check sorting order and apply accordingly
-                        if sort_option[1].lower() == 'asc':
-                            query = query.order_by(asc(getattr(table_name, sort_option[0])))
-                        elif sort_option[1].lower() == 'desc':
-                            query = query.order_by(desc(getattr(table_name, sort_option[0])))
+                if sort_by is not None:
+                    query = self.apply_sorting(query, table_name, sort_by)
                 # Fetch data using pagination (offset and limit)
                 res = query.offset(offset).limit(min(chunk_size, limit - offset) if limit is not None else chunk_size).all()
                 # If no data is fetched, exit the loop
@@ -163,9 +214,9 @@ class DbService:
                 else:
                     data = [row for row in res]
                 # Convert dictionary data to DataFrame
-                df = pd.DataFrame(data)
+                chunked_df = pd.DataFrame(data)
                 # Append DataFrame to list
-                dfs.append(df)
+                res_df.append(chunked_df)
                 # Update offset for next iteration
                 offset += chunk_size
                 # Check if limit is reached
@@ -177,12 +228,9 @@ class DbService:
             # Return None for DataFrame and invalid columns
             return None, invalid_columns
 
-        # Concatenate all DataFrames into one final DataFrame
-        final_df = pd.concat(dfs, ignore_index=True)
-        # Drop the "_sa_instance_state" column added by SQLAlchemy ORM
-        if "_sa_instance_state" in final_df.columns:
-            final_df.drop("_sa_instance_state", axis=1, inplace=True)
-        # Return the final DataFrame containing all queried data and list of invalid columns
+        # Concatenate all DataFrames in the list
+        final_df = pd.concat(res_df, ignore_index=True)
+        # final_df.drop('_sa_instance_state', axis=1,inplace=True)
         return final_df, invalid_columns
 
 
@@ -225,32 +273,32 @@ class DbService:
         table_info = {
             "Foreign Keys": [],
             "Indexes": [],
-            "Columns": []
+            "Column Names": [],
+            "Column Types": [],
+            "Primary Keys": [],
+            "Nullable": []
         }
 
-        # Collect foreign key references
+        # Collect foreign key references, indexes, and column details
         for column in table.columns:
+            # Foreign keys
             foreign_keys = column.foreign_keys
             if foreign_keys:
                 for fk in foreign_keys:
                     table_info["Foreign Keys"].append(fk.target_fullname)
 
+            # Column details
+            table_info["Column Names"].append(column.name)
+            table_info["Column Types"].append(str(column.type))
+            table_info["Primary Keys"].append(column.primary_key)
+            table_info["Nullable"].append(column.nullable)
+
         # Collect indexes
         if table.indexes:
             table_info["Indexes"] = [index.name for index in table.indexes]
 
-        # Collect column details
-        for column in table.columns:
-            column_info = {
-                "Name": column.name,
-                "Type": str(column.type),
-                "Primary Key": column.primary_key,
-                "Nullable": column.nullable
-            }
-            table_info["Columns"].append(column_info)
-
         # Pad lists with None values to ensure equal lengths
-        max_length = max(len(table_info["Foreign Keys"]), len(table_info["Indexes"]), len(table_info["Columns"]))
+        max_length = max(len(table_info["Foreign Keys"]), len(table_info["Indexes"]), len(table_info["Column Names"]))
         for key in table_info:
             table_info[key] += [None] * (max_length - len(table_info[key]))
 
@@ -258,71 +306,34 @@ class DbService:
         if as_df:
             return pd.DataFrame(table_info)
         else:
-            # Print table information
-            print(f"Data of {table_name} table:")
-            print("\nForeign Keys are:")
-            for fk in table_info["Foreign Keys"]:
-                print(fk)
-            print("\nIndexes are:")
-            if table_info["Indexes"]:
-                for index in table_info["Indexes"]:
-                    print(index)
-            else:
-                print("None")
-            print("\nColumns Data:")
-            for column in table_info["Columns"]:
-                print("Column Name:", column["Name"])
-                print("Column Type:", column["Type"])
-                print("Primary Key:", column["Primary Key"])
-                print("Nullable:", column["Nullable"])
-                print()
+            self.print_table_info(table_info, table_name)
 
 
-                
-    def simple_dql(self, sql_statement):
+    def run_select_query(self, sql_statement, return_dataframe=False):
         """
-        Execute a simple Data Query Language (DQL) SQL statement against the database using SQLAlchemy.
+        Executes a SELECT SQL query and either prints the results or returns them as a DataFrame.
 
-        Parameters:
-        - sql_statement: str
-            The SQL statement to execute.
+        Args:
+            sql_statement (str): The SQL SELECT statement to be executed.
+            return_dataframe (bool): If True, the results are returned as a pandas DataFrame. 
+                                    If False, the results are printed and returned as a tuple of column names and data.
 
         Returns:
-        - ResultProxy
-            The result of executing the SQL statement against the database.
+            If return_dataframe is True:
+                pandas.DataFrame: A DataFrame containing the query results.
+            If return_dataframe is False:
+                tuple: A tuple containing the column names (list) and data (list of tuples).
 
-        Note:
-        - This method is intended for executing simple SELECT statements.
-        - It extracts the table name from the SQL statement, retrieves the schema from the engine URL,
-          and replaces the original table name with the fully qualified table name before execution.
+        Raises:
+            ValueError: If the provided SQL statement is not a SELECT statement.
+            Exception: For any other exceptions that occur during the execution of the query.
         """
-
-        # Define the regular expression pattern to match the table name
-        pattern = r'FROM\s+(\w+)\s*'
-
-        # Search for the pattern in the SQL statement
-        match = re.search(pattern, sql_statement, re.IGNORECASE)
-
-        if match:
-            # Extract the table name from the matched group
-            table_name = match.group(1)
-        else:
-            return None
-
-        # Getting schema from engine url
-        url_string = str(self.engine.url)
-        table_schema = re.search(r'search_path%3D(.*?)(%|$)', url_string).group(1)
-
-        # Building table name
-        quoted_table_name = f'{table_schema}."{table_name}"'
-        sql_to_exec = sql_statement.replace(table_name,quoted_table_name)
-        print(sql_to_exec)
-
         with self.engine.connect() as connection:
             if isinstance(sql_to_exec, str):
                 sql_to_exec = text(sql_to_exec)
             result = connection.execute(sql_to_exec)
         return result
+
 
     def delete_table(self, table_name, content, headers):
         pass
@@ -356,7 +367,7 @@ if __name__ == "__main__":
 
     eng = create_local_engine(test='dev')
     ob  = DbService(eng)
-    existing_creators = ob.filter_query_table(Creatort, [Creatort.name, Creatort.creator_image], [['Israel','gomaa1130'], ['TWITTER', 'TIKTOK']],to_df=True)
+    # existing_creators = ob.filter_query_table(Creatort, [Creatort.name, Creatort.creator_image], [['Israel','gomaa1130'], ['TWITTER', 'TIKTOK']],to_df=True)
     # ob.create_table(Post)
     # self.db_obj.filter_query_table(Creatort, Creatort.name, self.data_df.name, True)
 
