@@ -8,7 +8,6 @@ from shared.connectors.s3_connector import S3Connector
 from shared.connectors.sqs_connector import SQSConnector
 
 
-
 with open('DB_Manager_EP/config_file_.json', 'r') as f:
     config_data = json.load(f)
 

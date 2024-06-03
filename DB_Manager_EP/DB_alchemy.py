@@ -278,7 +278,7 @@ class DbService:
                 print()
 
 
-
+                
     def simple_dql(self, sql_statement):
         """
         Execute a simple Data Query Language (DQL) SQL statement against the database using SQLAlchemy.
@@ -324,9 +324,6 @@ class DbService:
             result = connection.execute(sql_to_exec)
         return result
 
-    def update_table(self, table_name, content, headers):
-        pass
-
     def delete_table(self, table_name, content, headers):
         pass
 
@@ -336,85 +333,6 @@ class DbService:
     def run_query(self):
         # self.engine.
         pass
-
-
-
-
-
-def convert_names_in_list(list_, old_column_name, new_column_name):
-    # Iterate through the list of dictionaries and update the key
-    try:
-        for item in list_:
-            if old_column_name in item:
-                item[new_column_name] = item.pop(old_column_name)
-        return list_
-    except:
-        print("old column name might not be in the list")
-        return list_
-
-
-# def update_posts_with_creator_id(post_list, session):
-#     names_to_check = [post_data['name'] for post_data in post_list]
-#     # Query the database to get creator_id based on the 'name' column
-#     existing_creators = session.query(Creator).filter(Creator.name.in_(names_to_check)).all()
-#     # creators = session.query(Creator.name, Creator.creator_id).all()
-#     for post_data in post_list:
-#         try:
-#             existing_post = next(post for post in existing_creators if post.name == post_data['name'])
-#             # Handle the case where a matching post was found
-#             post_data['creator_fk'] = existing_post.creator_id
-#         except StopIteration:
-#             # Handle the case where no matching post was found
-#             print("No existing post found")
-#             break
-#     return post_list
-
-
-# def append_posts_fk_into_existis_posts(session, post_data_list):
-#     urls_to_check = [post_data['url'] for post_data in posts_data_list]
-#     # Query existing posts based on multiple URLs
-#     existing_posts = session.query(Posts).filter(Posts.url.in_(urls_to_check)).all()
-#
-#     for post_data in posts_data_list:
-#         try:
-#             # Get the existing post from the database
-#             existing_post = next(post for post in existing_posts if post.url == post_data['url'])
-#             # Add the post_fk field to the existing post
-#             post_data['post_fk'] = existing_post.id
-#         except StopIteration:
-#             break
-#
-#     return post_data_list
-
-
-def insert_posts_bulk_ep(session, posts_data_list):
-    # todo: refactor the fun; split it; check its functionalities
-    # It split the posts to post id and post history
-    #
-
-    posts_list_not_exist_in_db = []
-    posts_list_exist_in_db = []
-    # Extract all URLs from the posts_data_list
-    urls_to_check = [post_data['url'] for post_data in posts_data_list]
-
-    # Query existing posts based on multiple URLs
-    existing_posts = session.query(tbls.Post).filter(tbls.Post.url.in_(urls_to_check)).all()
-    existing_post_urls = {post.url for post in existing_posts}
-
-    for post_data in posts_data_list:
-        post_data['post_history_id'] = str(uuid.uuid4())
-        if post_data['url'] not in existing_post_urls:
-            post_data['post_id'] = str(uuid.uuid4())
-            posts_list_not_exist_in_db.append(post_data)
-        else:
-            try:
-                # Get the existing post from the database
-                existing_post = next(post for post in existing_posts if post.url == post_data['url'])
-                # Add the post_fk field to the existing post
-                post_data['post_fk'] = existing_post.post_id
-                posts_list_exist_in_db.append(post_data)
-            except StopIteration:
-                break
 
     def filter_query_table(self, table_class, filter_column, filter_values, distinct = False, to_df = False):
         with self.get_db() as session:

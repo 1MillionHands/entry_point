@@ -6,6 +6,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from table_objects.post import PostHandler
 
+
 # with open('DB_Manager_EP/config_file_.json', 'r') as f:
 #     config_data = json.load(f)
 
@@ -76,7 +77,6 @@ class EventHandler:
 
         else:
             raise Exception("No event_name exists")
-
 
 
 

@@ -10,6 +10,7 @@ from table_objects.table_handler import TableHandler
 from utils import PostUtils
 
 
+
 class PostHandler(TableHandler):
 
     def __init__(self, data, event):
