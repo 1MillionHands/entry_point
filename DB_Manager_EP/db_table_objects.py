@@ -11,7 +11,8 @@ class Post(Base):
     __tablename__ = 'Post'
 
     post_id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-    # creator_fk = Column(String, ForeignKey('Creator.creator_id'))
+    # creator_fk = Column(String, ForeignKey('Creator.creator_id')) todo: remove when program run in production
+    creator_id = Column(String, ForeignKey('Creator.creator_id'))
     publish_date = Column(DateTime, default=datetime(2000, 1, 1))
     removed_date = Column(DateTime, default=datetime(2000, 1, 1))
     url = Column(String)
@@ -34,8 +35,6 @@ class Post(Base):
     date_archive = Column(DateTime, default=datetime(2000, 1, 1))
     virality_score = Column(Float, default=0)
 
-    __table_args__ = {'schema': 'omh_schema'}
-
 
 class PlatformType(PythonEnum):
     LINKEDIN = auto()
@@ -50,7 +49,7 @@ class PostHistory(Base):
     __tablename__ = 'PostHistory'
 
     post_history_id = Column('postHistory_id', String, primary_key=True, default=str(uuid.uuid4()))
-    # post_fk = Column(String, ForeignKey('Post.post_id'))
+    post_id = Column(String, ForeignKey('Post.post_id'))
     num_of_likes = Column(Integer, default=0)
     num_of_views = Column(Integer, default=0)
     timestamp = Column(DateTime, default=datetime(2000, 1, 1))  # last scrape time
@@ -59,7 +58,6 @@ class PostHistory(Base):
     num_of_comments = Column(Integer, default=0)
     video_play_count = Column(Integer, default=0)
     video_view_count = Column(Integer, default=0)
-    volunteer_engagement = Column(Integer, default=0)
     virality_score = Column(Float, default=0)
 
 
@@ -68,7 +66,6 @@ class Creatort(Base):
 
     creator_id = Column(String, primary_key=True, default=str(uuid.uuid4()))
     name = Column(String, default='no_name')
-    volunteer_engagement = Column(Integer, default=0)
     num_of_deleted_posts = Column(Integer, default=0)
     sentiment = Column(Integer, default=0)
     creator_image = Column(String)
@@ -85,10 +82,9 @@ class Creatort(Base):
 
 class CreatorHistoryt(Base):
     __tablename__ = 'CreatorHistory'
-    # now = datetime.utcnow()
 
     creator_history_id = Column('creatorHistory_id', String, primary_key=True, default=str(uuid.uuid4()))
-    creator_fk = Column(String, ForeignKey('Creator.creator_id'))
+    creator_id = Column(String, ForeignKey('Creator.creator_id'))
     owner_post_count = Column(Integer, default=0)
     owner_follower_count = Column(Integer, default=0)
     creator_score = Column(Integer, default=0)

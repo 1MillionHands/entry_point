@@ -22,7 +22,6 @@ class EventHandlerUtils:
     page_size = 500
 
 class PostUtils:
-    POST_FK = 'post_fk'
 
     POST_HISTORY_ID = 'post_history_id'
 
@@ -34,11 +33,11 @@ class PostUtils:
 
     # * the name are after preprocess
     POST_HISTORY_VARIABLES = ['num_of_likes', 'num_of_views', 'timestamp', 'scrape_status', 'curr_engagement',
-                              'num_of_comments', 'video_play_count', 'video_view_count', 'virality_score', 'post_fk',
+                              'num_of_comments', 'video_play_count', 'video_view_count', 'virality_score', 'post_id',
                               'post_history_id']
     POST_VARIABLES = ['url', 'publish_date', 'location', 'content', 'type', 'media_url', 'image_url', 'sentiment',
-                      'post_id', 'creator_fk', 'platform_type', 'virality_score','hashtag_list']
-    CREATOR_HISTORY_VARIABLES = ['owner_post_count', 'owner_follower_count', 'creator_fk', 'creator_history_id']
+                      'post_id', 'creator_id', 'platform_type', 'virality_score','hashtag_list']
+    CREATOR_HISTORY_VARIABLES = ['owner_post_count', 'owner_follower_count', 'creator_id', 'creator_history_id']
     CREATOR_FIELDS = ['creator_image', 'name', 'creator_url', 'is_verified', 'creator_id', 'platform_type']
 
     SUCCESS_RESPONSE = 200
@@ -59,3 +58,5 @@ class PostUtils:
         'tiktok': 'TIKTOK',
         'Tiktok': 'TIKTOK'
     }
+
+    NEW_CREATORS_INDICATOR = 'new_creators_indicator'

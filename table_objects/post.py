@@ -30,11 +30,12 @@ class PostHandler(TableHandler):
         """
 
         self.upload_to_s3(self.event['s3_filename'])  # todo: check if you can use a ready function in data service
-        self.match_db_field_names()  # todo: add it into this class
-        self.preprocess_posts_to_fit_db()  # todo: add it into this class
+        self.match_db_field_names()
+        self.preprocess_posts_to_fit_db()
         post_id_values_to_update, post_history_id_values_to_update = self.update_db()
-        msg = self.create_messages(post_id_values_to_update, post_history_id_values_to_update)
-        self.send_messages(msg)
+        # close the circle - todo: implement the circle
+        # msg = self.create_messages(post_id_values_to_update, post_history_id_values_to_update)
+        # self.send_messages(msg)
 
     def run_from_circle(self):
         pass
@@ -56,22 +57,30 @@ class PostHandler(TableHandler):
         Performs bulk insertion of new creators and updates existing ones in the database.
         :return: None
         """
-        # todo: I have a problem which the id of creators is not distinct
-        existing_creators = self.db_obj.filter_query_table(Creatort, [Creatort.name,Creatort.platform_type], [list(self.data_df.name), list(self.data_df.platform_type)],True, True)
+        # filters = [
+        #     {
+        #         "column": "name",
+        #         "values": list(self.data_df.name)
+        #     },
+        #     {
+        #         "column": "platform_type",
+        #         "values": list(self.data_df.platform_type)
+        #     }
+        # ]
+        # existing_creators = self.db_obj.query_table_orm(table_name=Creatort, columns=[Creatort.name,Creatort.platform_type], filters=filters, distinct =True, to_df=True)
+        existing_creators = self.db_obj.filter_query_table(Creatort, [Creatort.name, Creatort.platform_type], [list(self.data_df.name), list(self.data_df.platform_type)], True, True)
         creator_exist_in_db = existing_creators[['name', PostUtils.CREATOR_ID,'platform_type']].rename(columns={PostUtils.CREATOR_ID: 'creator_id_temp'})
         self.data_df = self.data_df.merge(creator_exist_in_db, how='left', on=['name','platform_type'])
-
-        self.data_df['new_creators_indicator'] = self.data_df[['creator_id_temp']].isnull()
-        self.data_df[PostUtils.CREATOR_ID] = self.data_df[['creator_id_temp']].fillna(str(uuid.uuid4()))
+        self.data_df[PostUtils.NEW_CREATORS_INDICATOR] = self.data_df[['creator_id_temp']].isnull()
+        self.data_df[PostUtils.CREATOR_ID] = [str(uuid.uuid4()) if empty_id_cond else id for id, empty_id_cond in self.data_df[['creator_id_temp', PostUtils.NEW_CREATORS_INDICATOR]].values]
         self.data_df[PostUtils.CREATOR_HISTORY_ID] = [str(uuid.uuid4()) for i in range(self.data_df.shape[0])]
 
         current_cols = self.columns_exist_in_external_data(PostUtils.CREATOR_FIELDS, self.data_df.columns)
-        creators = self.data_df[self.data_df['new_creators_indicator']][current_cols]
+        creators = self.data_df[self.data_df[PostUtils.NEW_CREATORS_INDICATOR]][current_cols].to_dict(orient='records')
         self.db_obj.insert_table(Creatort, creators)
 
-        creators_hst = self.data_df.rename(columns={PostUtils.CREATOR_ID: 'creator_fk'})
         current_cols = self.columns_exist_in_external_data(PostUtils.CREATOR_HISTORY_VARIABLES, self.data_df.columns)
-        self.db_obj.insert_table(CreatorHistoryt, creators_hst[current_cols])
+        self.db_obj.insert_table(CreatorHistoryt, self.data_df[current_cols].to_dict(orient='records'))
 
 
     def insert_posts_bulk(self):
@@ -80,20 +89,48 @@ class PostHandler(TableHandler):
         :return: tuple (list, list) of updated post ID values and post history ID values
         """
 
-        existing_posts = self.db_obj.filter_query_table(Post, Post.url, list(self.data_df.url),True, True)
-        self.data_df = self.data_df.merge(existing_posts, how='left', on='url')
+        def find_out_of_range_values(df, min_value=-2147483648, max_value=2147483647):
+            out_of_range_rows = []
+            for idx, row in df.iterrows():
+                if any(isinstance(value, int) and (value < min_value or value > max_value) for value in row):
+                    print(f"Row {idx} has out-of-range value.")
+                    out_of_range_rows.append(idx)
+            return out_of_range_rows
+        existing_posts = self.db_obj.query_table_orm(Post, Post.url, list(self.data_df.url),True, True)
+        # filters = [
+        #     {
+        #         "column": "name",
+        #         "values": list(self.data_df.name)
+        #     },
+        #     {
+        #         "column": "platform_type",
+        #         "values": list(self.data_df.platform_type)
+        #     }
+        # ]
+        # existing_creators = self.db_obj.query_table_orm(table_name=Post,columns=[Creatort.name, Creatort.platform_type], filters=filters, distinct=True, to_df=True)
+        if existing_posts[0] is not None:
+            self.data_df = self.data_df.merge(existing_posts, how='left', on='url')
 
-        self.data_df['new_posts_indicator'] = self.data_df['post_id'].isnull()
-        self.data_df[PostUtils.POST_ID] = self.data_df['post_id'].apply(lambda x: str(uuid.uuid4()) if x is None else x)
+            self.data_df['new_posts_indicator'] = self.data_df[PostUtils.POST_ID].isnull()
+            self.data_df[PostUtils.POST_ID] = self.data_df[PostUtils.POST_ID].apply(lambda x: str(uuid.uuid4()) if x is None else x)
+
+            new_posts = self.data_df[self.data_df['new_posts_indicator']]
+        else:
+            self.data_df[PostUtils.POST_ID] = [str(uuid.uuid4()) for x in range(self.data_df.shape[0])]
+            new_posts = self.data_df.copy()
+
+        current_cols = self.columns_exist_in_external_data(PostUtils.POST_VARIABLES, self.data_df.columns)
+        self.db_obj.insert_table(Post, new_posts[current_cols].to_dict(orient='records'))
+
         self.data_df[PostUtils.POST_HISTORY_ID] = str(uuid.uuid4())
 
-        new_posts = self.data_df[self.data_df['new_posts_indicator']][PostUtils.POST_VARIABLES]
-        self.db_obj.insert_table(Post, new_posts)
+        if len(find_out_of_range_values(self.data_df[current_cols])) >= 1:
+            raise "One of the post data contain to high value"
 
-        posts_hst = self.data_df.rename(columns={PostUtils.POST_ID: 'post_fk'})[PostUtils.POST_HISTORY_VARIABLES]
+        posts_hst = self.data_df[current_cols].to_dict(orient='records')
         self.db_obj.insert_table(PostHistory, posts_hst)
 
-        post_id_values_to_update = list(new_posts['post_fk'])
+        post_id_values_to_update = list(new_posts[PostUtils.POST_ID])
         post_history_id_values_to_update = list(self.data_df[PostUtils.POST_HISTORY_ID])
         return post_id_values_to_update, post_history_id_values_to_update
 

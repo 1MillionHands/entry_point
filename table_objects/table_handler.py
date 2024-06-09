@@ -2,7 +2,7 @@
 import pandas as pd
 
 # Local application/library specific imports
-from DB_Manager_EP.DB_alchemy import create_local_engine, DbService
+from DB_Manager_EP.DB_alchemy import DbService
 from utils import *
 from shared.connectors.s3_connector import S3Connector
 from shared.connectors.sqs_connector import SQSConnector
@@ -18,10 +18,7 @@ class TableHandler:
         self.data = data
         self.data_df = pd.DataFrame(data)
         self.event = event
-        engine = create_local_engine(event['env_status'])
-        self.db_obj = DbService(engine)
-        # from DB_Manager_EP.db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory
-        # existing_creators = self.db_obj.filter_query_table(Creatort, Creatort.name, ['Israel','gomaa1130'],to_df=True)
+        self.db_obj = DbService(event['env_status'])
         self.q = SQSConnector(config_data['sqs']['queue_url'],
                               access_key=config_data['sqs']['access_key'],
                               secret_key=config_data['sqs']['secret_key'])
