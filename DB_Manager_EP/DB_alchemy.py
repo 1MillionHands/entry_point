@@ -12,58 +12,44 @@ import re
 import uuid
 
 
-
-with open('config_file.json', 'r') as f:
+with open('./config_file.json', 'r') as f:
   config_data = json.load(f)
-# with open('DB_Manager_EP/config_file_.json', 'r') as f:
+# with open(r'C:\Users\yanir\PycharmProjects\oneMilion\entry_point\DB_Manager_EP\config_file_.json', 'r') as f:
 #   config_data = json.load(f)
 
 
-def create_local_engine(test = False):
-    HOST = config_data['aws_db']['host']
-    PORT = config_data['aws_db']['port']
-    DBNAME = config_data['aws_db']['dbname']
-    SCHEMA = "omh_schema_test" if test else "omh_schema"
-    USER = config_data['aws_db']['user']
-    PASSWORD = config_data['aws_db']['password']
-
-    # Define the database connection URL
-    DATABASE_URL = f'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?options=-csearch_path%3D{SCHEMA}'
-    print("Connecting to DB with URL:", DATABASE_URL)
-    # Create a SQLAlchemy engine
-    engine = create_engine(DATABASE_URL)
-
-    return engine
-
-def get_db(engine):
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-    db = SessionLocal()
-    try:
-      yield db
-    finally:
-      db.close()
-
 class DbService:
-
-    def __init__(self, engine):
-        self.engine = engine
+    def __init__(self, is_test = True):
+        self.engine = self.create_local_engine(test=is_test)
+        self.SCHEMA = "omh_schema_test" if is_test else "omh_schema"
         # Create a session object to interact with the database
-        self.Session = scoped_session(sessionmaker(bind=self.engine))
-        # self.session = Session()
+        self.Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=self.engine))
+
+    @staticmethod
+    def create_local_engine(test=False) -> object:
+        HOST = config_data['aws_db']['host']
+        PORT = config_data['aws_db']['port']
+        DBNAME = config_data['aws_db']['dbname']
+        SCHEMA = "omh_schema_test" if test else "omh_schema"
+        USER = config_data['aws_db']['user']
+        PASSWORD = config_data['aws_db']['password']
+
+        # Define the database connection URL
+        DATABASE_URL = f'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?options=-csearch_path%3D{SCHEMA}'
+        print("Connecting to DB with URL:", DATABASE_URL)
+        # Create a SQLAlchemy engine
+        engine = create_engine(DATABASE_URL)
+
 
     @contextmanager
-    def get_db(self,):
-        SessionLocal = self.Session()
-
+    def get_db(self):
+        session = self.Session()
         try:
-            yield SessionLocal
-            SessionLocal.commit()
-        except Exception as e:
-            SessionLocal.rollback()
-            raise e
+            # session.execute(text(f'SET search_path TO {self.SCHEMA}'))
+            yield session
+            session.commit()
         finally:
-            self.Session.close()
+            session.close()
 
     def create_table(self, tbl_obj ):
         import logging
@@ -85,18 +71,21 @@ class DbService:
         except Exception as f:
             print(f)
 
-    def insert_table_test(self, tbl_obj, headers):
+    def insert_table(self, tbl_obj, headers):
         with self.get_db() as session:
-            session.bulk_insert_mappings(tbl_obj, headers)
-
-            
-    @staticmethod
-    def insert_table(db, tbl_obj, headers):
-        db.bulk_insert_mappings(tbl_obj, headers)
-        db.commit()
+            try:
+                session.bulk_insert_mappings(tbl_obj, headers)
+                session.commit()
+                # print(session.statement.compile(compile_kwargs={"literal_binds": True}))
+            except Exception as e:
+                session.rollback()
+                raise e
+        # with self.get_db() as session:
+        #     session.bulk_insert_mappings(tbl_obj, headers)
 
 
     def query_table_orm(self, table_name, columns=None, chunk_size=10000, limit=None, sort_by=None, filters=None, distinct=False, to_df=False):
+        # table_name.metadata.schema = self.SCHEMA
         try:
             with self.get_db() as session:
                 # Start building the query for the specified table using SQLAlchemy ORM
@@ -195,11 +184,6 @@ class DbService:
             # Return None for DataFrame and invalid columns
             return None, invalid_columns
 
-
-
-
-
-
     def get_table_info(self, table_name):
         """
         Retrieve information about a table from the database using SQLAlchemy ORM.
@@ -283,7 +267,6 @@ class DbService:
             try:
                 if not sql_statement.strip().lower().startswith('select'):
                     raise ValueError("Only SELECT statements are allowed.")
-
                 # Convert string to a SQLAlchemy text object
                 stmt = text(sql_statement)
 
@@ -307,8 +290,6 @@ class DbService:
                 print("Error:", error)
                 raise  # Re-raise the exception
 
-
-
     def delete_table(self, table_name, content, headers):
         pass
 
@@ -320,6 +301,7 @@ class DbService:
         pass
 
     def filter_query_table(self, table_class, filter_column, filter_values, distinct = False, to_df = False):
+        # table_class.metadata.schema = self.SCHEMA
         with self.get_db() as session:
             filter_list = [col.in_(vals) for col, vals in zip(filter_column, filter_values)]
             print(filter_list)
@@ -336,41 +318,36 @@ class DbService:
 
 
 
-if __name__ == "__main__":
-    from db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory,Volunteer
-
-    eng = create_local_engine(test=True)
-    ob  = DbService(eng)
+# if __name__ == "__main__":
+    # from db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory,Volunteer
+    #
+    # istest = False
+    # ob  = DbService( istest)
     # filters = [
     # {
     #     "column": "platform_type",
     #     "values": ['TWITTER','INSTAGRAM'],
     # }]
-
-    # df, cols = ob.query_table_orm(table_name=Post, columns=['type'],to_df=True, filters=filters)
-
+    #
+    # df, cols = ob.query_table_orm(table_name=Creatort,to_df=True)
+    # # existing_creators = ob.filter_query_table(Creatort,\
+    # #                                           [Post.creator_id],\
+    # #                                           [['8c628039-dd8c-4395-b125-6708803dfd37']]\
+    # #                                           ,to_df=True
+    # #                                           )
+    #
     # print(df)
 
 
-    headers = [
-        {"volunteer_id": "value10", "first_name": "value20", "last_name": "value30", "url": "value40"},
-        {"volunteer_id": "value50", "first_name": "value60", "last_name": "value70", "url": "value80"}
-        # Add more rows as needed
-    ]
-
-    ob.insert_table_test(Volunteer,headers=headers)
+    # headers = [
+    #     {"volunteer_id": "value10", "first_name": "value20", "last_name": "value30", "url": "value40"},
+    #     {"volunteer_id": "value50", "first_name": "value60", "last_name": "value70", "url": "value80"}
+    #     # Add more rows as needed
+    # ]
+    #
+    # ob.insert_table_test(Volunteer,headers=headers)
 
 
     # existing_creators = ob.filter_query_table(Creatort, [Creatort.name, Creatort.creator_image], [['Israel','gomaa1130'], ['TWITTER', 'TIKTOK']],to_df=True)
     # ob.create_table(Post)
     # self.db_obj.filter_query_table(Creatort, Creatort.name, self.data_df.name, True)
-
-
-    # for row in result:
-    #     print(row)
-
-
-
-
-    # with DbService(eng) as db_service:
-    #     existing_creators = db_service.filter_query_table(Creatort, Creatort.name, ['Israel','gomaa1130'],to_df=True)

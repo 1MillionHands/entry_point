@@ -2,3 +2,4 @@ requests
 schedule
 sqlalchemy
 pandas
+urllib3==1.26.6

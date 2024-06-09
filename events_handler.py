@@ -6,9 +6,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from table_objects.post import PostHandler
 
-
-# with open('DB_Manager_EP/config_file_.json', 'r') as f:
-#     config_data = json.load(f)
+# with open('./DB_Manager_EP/config_file.json_', 'r') as f:
+#   config_data = json.load(f)
 
 with open('config_file.json', 'r') as f:
     config_data = json.load(f)
@@ -80,10 +79,10 @@ class EventHandler:
 
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # with open('config_file_.json', 'r') as f:
     #     config_data = json.load(f)
     #     f.close()
-    obj = EventHandler()
-    obj.run({'event_name': 'get_posts', 'env_status': 'dev', 's3_filename': 'post_temp.json'})
+    # obj = EventHandler()
+    # obj.run({'event_name': 'get_posts', 'env_status': True, 's3_filename': 'post_temp.json'})
     # print(DbService(True).DATABASE_URL)
