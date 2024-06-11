@@ -5,10 +5,19 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 import json
 import pandas as pd
 import psycopg2
+import os
 
+# Get the absolute path to the current script
+current_dir = os.path.dirname(__file__)
 
-with open('./config_file.json', 'r') as f:
+# Construct the path to the config file relative to the current script
+config_path = os.path.join(current_dir, '..', 'config_file.json')
+
+# Open and read the config file
+with open(config_path, 'r') as f:
   config_data = json.load(f)
+# with open('./config_file.json', 'r') as f:
+#   config_data = json.load(f)
 # with open(r'C:\Users\yanir\PycharmProjects\oneMilion\entry_point\DB_Manager_EP\config_file_.json', 'r') as f:
 #   config_data = json.load(f)
 
