@@ -4,8 +4,8 @@ import pandas as pd
 # Local application/library specific imports
 from DB_Manager_EP.DB_alchemy import DbService
 from utils import *
-from shared.connectors.s3_connector import S3Connector
-from shared.connectors.sqs_connector import SQSConnector
+from DB_Manager_EP.connectors.s3_connector import S3Connector
+from DB_Manager_EP.connectors.sqs_connector import SQSConnector
 
 
 with open('DB_Manager_EP/config_file_.json', 'r') as f:

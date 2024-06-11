@@ -2,8 +2,8 @@ import json
 import requests
 from requests.adapters import HTTPAdapter
 from table_objects.post import PostHandler
-from utils import EventHandlerUtils
 from urllib3.util import Retry
+from utils import EventHandlerUtils
 
 # with open('./DB_Manager_EP/config_file.json_', 'r') as f:
 #   config_data = json.load(f)
