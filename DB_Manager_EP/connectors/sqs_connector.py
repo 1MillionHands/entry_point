@@ -42,9 +42,9 @@ class SQSConnector:
 if __name__ == '__main__':
     #Add the region setting!
     queue_url = 'https://sqs.eu-north-1.amazonaws.com/976476826599/Scrapers_DSservice_Scoring'
-    config_file_path = 'config_file_.json'
+    config_file_path = 'config_file.json'
     if (os.path.exists(config_file_path)):
-        with open('config_file_.json', 'r') as f:
+        with open('config_file.json', 'r') as f:
             config_data = json.load(f)
 
     sqs = SQSConnector(queue_url, access_key=config_data['sqs']['access_key'], secret_key=config_data['sqs']['secret_key'])
