@@ -2,14 +2,9 @@ from contextlib import contextmanager
 from sqlalchemy import create_engine, MetaData, asc, desc, Column, Integer, String, ForeignKey, inspect, Table
 from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.exc import InvalidRequestError
-import db_table_objects as tbls
-from datetime import datetime
 import json
 import pandas as pd
 import psycopg2
-import re
-import uuid
 
 
 with open('./config_file.json', 'r') as f:
