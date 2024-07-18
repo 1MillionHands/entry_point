@@ -5,18 +5,26 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 import json
 import pandas as pd
 import psycopg2
+import os
 
-with open('./config_file.json', 'r') as f:
-    config_data = json.load(f)
+# Get the absolute path to the current script
+current_dir = os.path.dirname(__file__)
 
+# Construct the path to the config file relative to the current script
+config_path = os.path.join(current_dir, '..', 'config_file.json')
 
+# Open and read the config file
+with open(config_path, 'r') as f:
+  config_data = json.load(f)
+# with open('./config_file.json', 'r') as f:
+#   config_data = json.load(f)
 # with open(r'C:\Users\yanir\PycharmProjects\oneMilion\entry_point\DB_Manager_EP\config_file_.json', 'r') as f:
 #   config_data = json.load(f)
 #
 # # todo: organize the file such that at the beginning there would the class utility function (i.e get db, check_table_exists and etc) and on the bottom all of the user usage function
 #
 class DbService:
-    def __init__(self, is_test=True):
+    def __init__(self, is_test = True):
         self.engine = self.create_local_engine(test=is_test)
         self.SCHEMA = "omh_schema_test" if is_test else "omh_schema"
         # Create a session object to interact with the database
@@ -157,7 +165,7 @@ class DbService:
         except Exception as e:
             print(f"An error occurred during pagination: {str(e)}")
             return None, invalid_columns
-    
+
     def query_table_orm(self, table_name, columns=None, chunk_size=10000, limit=None, sort_by=None, filters=None, distinct=False, to_df=False):
         try:
             with self.get_db() as session:
@@ -496,3 +504,8 @@ class DbService:
 #     # existing_creators = ob.filter_query_table(Creatort, [Creatort.name, Creatort.creator_image], [['Israel','gomaa1130'], ['TWITTER', 'TIKTOK']],to_df=True)
 #     # ob.create_table(Post)
 #     # self.db_obj.filter_query_table(Creatort, Creatort.name, self.df_data.name, True)
+
+
+    # existing_creators = ob.filter_query_table(Creatort, [Creatort.name, Creatort.creator_image], [['Israel','gomaa1130'], ['TWITTER', 'TIKTOK']],to_df=True)
+    # ob.create_table(Post)
+    # self.db_obj.filter_query_table(Creatort, Creatort.name, self.data_df.name, True)

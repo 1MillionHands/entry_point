@@ -5,8 +5,6 @@ import boto3
 
 ### Add to config file
 REGION = "eu-north-1"
-
-
 class SQSConnector:
     def __init__(self, queue_url, access_key=None, secret_key=None, region_name=REGION):
         self.region_name = region_name
