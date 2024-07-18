@@ -4,7 +4,7 @@ sys.path.append('opt/site-packages')
 
 
 def lambda_handler(event, context):
-    if event['env'] == 'dev':
+    if event["test_env_status"]:
         EventHandler().run(event)
     else:
         print("success")

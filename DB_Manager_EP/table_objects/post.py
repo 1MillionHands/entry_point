@@ -6,15 +6,15 @@ import pandas as pd
 # Local application/library specific imports
 from DB_Manager_EP.db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory
 from utils import *
-from table_objects.table_handler import TableHandler
+from table_handler import TableHandler
 from utils import PostUtils
 
 
 
 class PostHandler(TableHandler):
 
-    def __init__(self, data, event):
-        super().__init__(data, event)
+    def __init__(self, event):
+        super().__init__(event)
 
     def run(self, run_type):
 
@@ -57,18 +57,20 @@ class PostHandler(TableHandler):
         Performs bulk insertion of new creators and updates existing ones in the database.
         :return: None
         """
-        # filters = [
-        #     {
-        #         "column": "name",
-        #         "values": list(self.data_df.name)
-        #     },
-        #     {
-        #         "column": "platform_type",
-        #         "values": list(self.data_df.platform_type)
-        #     }
-        # ]
-        # existing_creators = self.db_obj.query_table_orm(table_name=Creatort, columns=[Creatort.name,Creatort.platform_type], filters=filters, distinct =True, to_df=True)
-        existing_creators = self.db_obj.filter_query_table(Creatort, [Creatort.name, Creatort.platform_type], [list(self.data_df.name), list(self.data_df.platform_type)], True, True)
+        filters = [
+            {
+                "column": "name",
+                "values": list(self.data_df.name)
+            },
+            {
+                "column": "platform_type",
+                "values": list(self.data_df.platform_type)
+            }
+        ]
+
+        # The query_table_orm fun return ( df, invalid columns), so we take df that located in index 0
+        existing_creators = self.db_obj.query_table_orm(table_name=Creatort, filters=filters, distinct = True, to_df=True)[0]
+        # existing_creators2 = self.db_obj.filter_query_table(Creatort, [Creatort.name, Creatort.platform_type], [list(self.df_data.name), list(self.df_data.platform_type)], True, True)
         creator_exist_in_db = existing_creators[['name', PostUtils.CREATOR_ID,'platform_type']].rename(columns={PostUtils.CREATOR_ID: 'creator_id_temp'})
         self.data_df = self.data_df.merge(creator_exist_in_db, how='left', on=['name','platform_type'])
         self.data_df[PostUtils.NEW_CREATORS_INDICATOR] = self.data_df[['creator_id_temp']].isnull()
@@ -97,17 +99,7 @@ class PostHandler(TableHandler):
                     out_of_range_rows.append(idx)
             return out_of_range_rows
         existing_posts = self.db_obj.query_table_orm(Post, Post.url, list(self.data_df.url),True, True)
-        # filters = [
-        #     {
-        #         "column": "name",
-        #         "values": list(self.data_df.name)
-        #     },
-        #     {
-        #         "column": "platform_type",
-        #         "values": list(self.data_df.platform_type)
-        #     }
-        # ]
-        # existing_creators = self.db_obj.query_table_orm(table_name=Post,columns=[Creatort.name, Creatort.platform_type], filters=filters, distinct=True, to_df=True)
+
         if existing_posts[0] is not None:
             self.data_df = self.data_df.merge(existing_posts, how='left', on='url')
 
