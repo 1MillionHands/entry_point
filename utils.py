@@ -6,12 +6,6 @@ POSTS_NUM = 50
 POST_IDS = "posts_id_list"
 
 
-with open('config_file.json', 'r') as f:
-    config_data = json.load(f)
-
-# with open('DB_Manager_EP/config_file.json', 'r') as f:
-#     config_data = json.load(f)
-
 class EventHandlerUtils:
     EVENT_NAME = 'event_name'
 

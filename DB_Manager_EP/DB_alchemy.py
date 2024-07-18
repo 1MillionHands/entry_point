@@ -1,26 +1,22 @@
 from contextlib import contextmanager
 from sqlalchemy import create_engine, MetaData, asc, desc, Column, Integer, String, ForeignKey, inspect, Table
 from sqlalchemy.sql import text
-from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
-from sqlalchemy.exc import InvalidRequestError
-import db_table_objects as tbls
-from datetime import datetime
+from sqlalchemy.orm import sessionmaker, scoped_session
 import json
 import pandas as pd
 import psycopg2
-import re
-import uuid
-
 
 with open('./config_file.json', 'r') as f:
-  config_data = json.load(f)
+    config_data = json.load(f)
+
+
 # with open(r'C:\Users\yanir\PycharmProjects\oneMilion\entry_point\DB_Manager_EP\config_file_.json', 'r') as f:
 #   config_data = json.load(f)
-
-
-
+#
+# # todo: organize the file such that at the beginning there would the class utility function (i.e get db, check_table_exists and etc) and on the bottom all of the user usage function
+#
 class DbService:
-    def __init__(self, is_test = True):
+    def __init__(self, is_test=True):
         self.engine = self.create_local_engine(test=is_test)
         self.SCHEMA = "omh_schema_test" if is_test else "omh_schema"
         # Create a session object to interact with the database
@@ -42,7 +38,6 @@ class DbService:
         engine = create_engine(DATABASE_URL)
         return engine
 
-
     @contextmanager
     def get_db(self):
         session = self.Session()
@@ -53,7 +48,7 @@ class DbService:
         finally:
             session.close()
 
-    def create_table(self, tbl_obj ):
+    def create_table(self, tbl_obj):
         import logging
 
         # logging.basicConfig(level=logging.INFO)
@@ -62,10 +57,11 @@ class DbService:
 
         if not self.engine.dialect.has_table(self.engine.connect(), tbl_obj.__tablename__):
             tbl_obj.metadata.create_all(self.engine)
+            print(f"Table {tbl_obj.__tablename__} created successfully")
         else:
             print("Table name already exists in the db")
 
-    def create_schema(self, db, schema_name ):
+    def create_schema(self, db, schema_name):
         # Check if the table exists
         try:
             self.session.execute(text("CREATE SCHEMA " + schema_name))
@@ -111,7 +107,6 @@ class DbService:
             else:
                 raise ValueError(f"Unsupported filter operator: {op}")
         return query.filter(*filter_list), invalid_columns
-    
 
     def apply_sort(self, query, table_name, sort_by):
         invalid_columns = []
@@ -125,7 +120,7 @@ class DbService:
             else:
                 query = query.order_by(column_attr.desc())
         return query, invalid_columns
-    
+
     def paginate_query(self, query, chunk_size, limit, to_df, invalid_columns):
         try:
             offset = 0
@@ -202,7 +197,7 @@ class DbService:
             print(f"An error occurred: {str(e)}")
             # Return None for DataFrame and invalid columns
             return None, invalid_columns
-        
+
     def get_table_info(self, table_name):
         """
         Retrieve information about a table from the database using SQLAlchemy ORM.
@@ -319,6 +314,7 @@ class DbService:
         inspector = inspect(self.engine)
         return table_name in inspector.get_table_names(schema=self.SCHEMA)
 
+    # todo: separate delete and trunc
     def delete_or_truncate_table(self, table_name, action="trunc"):
         """
         Deletes or truncates the specified table.
@@ -331,7 +327,7 @@ class DbService:
             return
 
         metadata = MetaData()
-        metadata.reflect(bind=self.engine, schema=self.SCHEMA)
+        metadata.reflect(bind=self.engine, schema=self.SCHEMA)  # todo: explain line if you can
         table = Table(table_name, metadata, autoload_with=self.engine)
 
         try:
@@ -347,15 +343,14 @@ class DbService:
         except Exception as e:
             print(f"An error occurred while performing the action {action} on the table {table_name}: {str(e)}")
 
-
     def update_table(self, table_name, content, headers):
         pass
 
     def run_query(self):
         # self.engine.
         pass
-    
-    def filter_query_table(self, table_class, filter_column, filter_values, distinct = False, to_df = False):
+
+    def filter_query_table(self, table_class, filter_column, filter_values, distinct=False, to_df=False):
         # table_class.metadata.schema = self.SCHEMA
         with self.get_db() as session:
             filter_list = [col.in_(vals) for col, vals in zip(filter_column, filter_values)]
@@ -370,16 +365,16 @@ class DbService:
             else:
                 results = query.all()
                 return results
-            
+
     def compare_schema(self):
         """
         Compares the database schema as defined by SQLAlchemy models with the actual database schema.
-        
-        This function inspects the database connected to by the current DbService instance, 
+                                                     1. todo:  to - by
+        This function inspects the database connected to by the current DbService instance,
         compares the tables and columns defined in the SQLAlchemy models with those in the actual database,
         and identifies any discrepancies. Discrepancies can include missing tables, missing columns, extra columns,
         and type mismatches between the model definitions and the actual database schema.
-        
+
         Returns:
             discrepancies (dict): A dictionary detailing any discrepancies found.
         """
@@ -395,13 +390,13 @@ class DbService:
         for table_class in Base.__subclasses__():
             # Get the table name from the model class
             table_name = table_class.__tablename__
-            
+
             # Check if the table exists in the actual database
             if table_name not in actual_tables:
                 # If the table is missing in the database, note it in discrepancies
                 discrepancies[table_name] = 'Table missing in database'
                 continue
-            
+            # todo: 2. rename the postgress db columns and sqlalchemy model columns
             # Get a dictionary of columns in the actual database table
             actual_columns = {col['name']: col for col in inspector.get_columns(table_name, schema=self.SCHEMA)}
             # Get a dictionary of columns defined in the SQLAlchemy model
@@ -414,10 +409,12 @@ class DbService:
             # Identify type mismatches between the model and the actual database columns
             type_mismatches = {
                 col: (str(model_columns[col].type), str(actual_columns[col]['type']))
-                for col in model_columns if col in actual_columns and str(model_columns[col].type) != str(actual_columns[col]['type'])
+                for col in model_columns if
+                col in actual_columns and str(model_columns[col].type) != str(actual_columns[col]['type'])
             }
 
             # Record any discrepancies found for the table
+            # todo:3. handle empty values: a. if one any of them empty, b. if all emtpy then should be handle differently
             discrepancies[table_name] = {
                 'missing_in_db': list(missing_in_db),
                 'extra_in_db': list(extra_in_db),
@@ -426,7 +423,7 @@ class DbService:
 
         # Return the dictionary of discrepancies
         return discrepancies
-    
+
     def get_schema_comparison(self):
         """
         Calls the compare_schema method and converts the result to a pandas DataFrame.
@@ -436,13 +433,14 @@ class DbService:
         """
         # Get discrepancies using compare_schema method
         discrepancies = self.compare_schema()
-        
+
         # Prepare data for DataFrame
         discrepancies_list = []
 
         for table, issues in discrepancies.items():
             if isinstance(issues, str):  # Handle missing table case
-                discrepancies_list.append({'table': table, 'column': None, 'issue': issues, 'model_type': None, 'db_type': None})
+                discrepancies_list.append(
+                    {'table': table, 'column': None, 'issue': issues, 'model_type': None, 'db_type': None})
             else:  # Handle column discrepancies
                 for issue_type, columns in issues.items():
                     if issue_type == 'type_mismatches':
@@ -469,34 +467,32 @@ class DbService:
 
         return df_discrepancies
 
+# if __name__ == "__main__":
+# from db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory,Volunteer, Base
 
+# is_test=False
+# ob = DbService(is_test)
 
-if __name__ == "__main__":
-    from db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory,Volunteer, Base
+# df = ob.get_schema_comparison()
+# print(df)
 
-    is_test=False
-    ob = DbService(is_test)
-
-    df = ob.get_schema_comparison()
-    print(df)
-
-    # df, cols = ob.query_table_orm(table_name=Post, limit=15000,to_df=True, sort_by= {"publish_date": False})
-    # print(df)
-    # df = ob.get_table_info('test_table')
-
-    # print(df)
-
-    # ob.delete_or_truncate_table('test_table', 'del')
-
-    # headers = [
-    #     {"volunteer_id": "value10", "first_name": "value20", "last_name": "value30", "url": "value40"},
-    #     {"volunteer_id": "value50", "first_name": "value60", "last_name": "value70", "url": "value80"}
-    #     # Add more rows as needed
-    # ]
-
-    # # ob.insert_table_test(Volunteer,headers=headers)
-
-
-    # existing_creators = ob.filter_query_table(Creatort, [Creatort.name, Creatort.creator_image], [['Israel','gomaa1130'], ['TWITTER', 'TIKTOK']],to_df=True)
-    # ob.create_table(Post)
-    # self.db_obj.filter_query_table(Creatort, Creatort.name, self.data_df.name, True)
+# df, cols = ob.query_table_orm(table_name=Post, limit=15000,to_df=True, sort_by= {"publish_date": False})
+# print(df)
+#     # df = ob.get_table_info('test_table')
+#
+#     # print(df)
+#
+#     # ob.delete_or_truncate_table('test_table', 'del')
+#
+#     # headers = [
+#     #     {"volunteer_id": "value10", "first_name": "value20", "last_name": "value30", "url": "value40"},
+#     #     {"volunteer_id": "value50", "first_name": "value60", "last_name": "value70", "url": "value80"}
+#     #     # Add more rows as needed
+#     # ]
+#
+#     # # ob.insert_table_test(Volunteer,headers=headers)
+#
+#
+#     # existing_creators = ob.filter_query_table(Creatort, [Creatort.name, Creatort.creator_image], [['Israel','gomaa1130'], ['TWITTER', 'TIKTOK']],to_df=True)
+#     # ob.create_table(Post)
+#     # self.db_obj.filter_query_table(Creatort, Creatort.name, self.df_data.name, True)
