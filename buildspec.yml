@@ -10,7 +10,6 @@ phases:
     commands:
       - echo "Zipping deployment package..."
       - zip -r9 deployment_package.zip DB_Manager_EP
-      - zip -g -r9 deployment_package.zip table_objects
       - zip -g -r9 deployment_package.zip requirements.txt
       - zip -g -r9 deployment_package.zip lambda_function.py
       - zip -g -r9 deployment_package.zip events_handler.py
