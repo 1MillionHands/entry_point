@@ -9,11 +9,6 @@ from DB_Manager_EP.data_sources.active_fence.table_object import ActiveFenceRowD
 from DB_Manager_EP.table_handler import TableHandler
 from utils import *
 
-with open('./config_file.json', 'r') as f:
-  config_data = json.load(f)
-# with open(r'C:\Users\yanir\PycharmProjects\oneMilion\entry_point\DB_Manager_EP\config_file_.json', 'r') as f:
-#     config_data = json.load(f)
-
 
 class ActiveFenceIngest(TableHandler):
     def __init__(self, event):

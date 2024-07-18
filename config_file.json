@@ -22,11 +22,11 @@
     "aws_db": {
         "user":"-----",
         "password":"-----",
-        "dbname": "-----",
-        "engine":"-----",
-        "host":"-----",
+        "dbname": "omh_server_db",
+        "engine":"postgres",
+        "host":"one-million-hands-db.cwmohwgxidvc.eu-north-1.rds.amazonaws.com",
         "port":5432,
-        "dbInstanceIdentifier":"-----"
+        "dbInstanceIdentifier":"one-million-hands-db"
     },
 	"letBotsWorkToekn": "-----",
 	"schedule": {

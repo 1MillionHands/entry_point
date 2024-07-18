@@ -8,20 +8,6 @@ from DB_Manager_EP.connectors.s3_connector import S3Connector
 from DB_Manager_EP.connectors.sqs_connector import SQSConnector
 import os
 
-# Get the absolute path to the current script
-current_dir = os.path.dirname(__file__)
-
-# Construct the path to the config file relative to the current script
-config_path = os.path.join(current_dir, '..', 'config_file.json')
-
-with open(config_path, 'r') as f:
-    config_data = json.load(f)
-with open('./config_file.json', 'r') as f:
-  config_data = json.load(f)
-# with open(r'C:\Users\yanir\PycharmProjects\oneMilion\entry_point\DB_Manager_EP\config_file_.json', 'r') as f:
-#     config_data = json.load(f)
-
-
 
 class TableHandler:
 
@@ -30,13 +16,8 @@ class TableHandler:
         self.df_data = pd.DataFrame()
         self.event = event
         self.db_obj = DbService(event['test_env_status'])
-        self.q = SQSConnector(config_data['sqs']['queue_url'],
-                              access_key=config_data['sqs']['access_key'],
-                              secret_key=config_data['sqs']['secret_key'])
-        self.s3object = S3Connector(
-            access_key=config_data['s3']['access_key']
-            , secret_key=config_data['s3']['secret_key']
-        )
+        self.q = SQSConnector()
+        self.s3object = S3Connector()
 
     def run(self):
         print("Extracting data...")
@@ -50,9 +31,7 @@ class TableHandler:
 
     def upload_to_s3(self, filename):
         try:
-            s3 = S3Connector(access_key=config_data['s3']['access_key'],
-                             secret_key=config_data['s3']['secret_key'],
-                             input_file=filename)
+            s3 = S3Connector()
             s3.write_raw_posts(self.data)
         except Exception as e:
             print("FAILED", e)

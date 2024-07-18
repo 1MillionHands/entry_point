@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from sqlalchemy import create_engine, MetaData, asc, desc, Column, Integer, String, ForeignKey, inspect, Table
 from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker, scoped_session
+from DB_Manager_EP.connectors.s3_connector import S3Connector
 import json
 import pandas as pd
 import psycopg2
@@ -32,12 +33,13 @@ class DbService:
 
     @staticmethod
     def create_local_engine(test=False) -> object:
+        secret = S3Connector.get_secret()
         HOST = config_data['aws_db']['host']
         PORT = config_data['aws_db']['port']
         DBNAME = config_data['aws_db']['dbname']
         SCHEMA = "omh_schema_test" if test else "omh_schema"
-        USER = config_data['aws_db']['user']
-        PASSWORD = config_data['aws_db']['password']
+        USER = secret['username']
+        PASSWORD = secret['password']
 
         # Define the database connection URL
         DATABASE_URL = f'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?options=-csearch_path%3D{SCHEMA}'

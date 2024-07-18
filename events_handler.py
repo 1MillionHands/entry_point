@@ -3,13 +3,6 @@ import json
 from table_objects.post import PostHandler
 from DB_Manager_EP.data_sources.active_fence.active_fence_ingestion import ActiveFenceIngest
 
-# with open('./DB_Manager_EP/config_file.json_', 'r') as f:
-#   config_data = json.load(f)
-
-# with open(r'C:\Users\yanir\PycharmProjects\oneMilion\entry_point\DB_Manager_EP\config_file_.json', 'r') as f:
-#   config_data = json.load(f)
-with open('config_file.json', 'r') as f:
-    config_data = json.load(f)
 
 class EventHandler:
 

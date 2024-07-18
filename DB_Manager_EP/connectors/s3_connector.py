@@ -1,23 +1,28 @@
 import boto3
+import json
+import os
+
+# Get the absolute path to the current script
+current_dir = os.path.dirname(__file__)
+
+# Construct the path to the config file relative to the current script
+config_path = os.path.join(current_dir, '..', 'config_file.json')
+
+# Open and read the config file
+with open(config_path, 'r') as f:
+    config_data = json.load(f)
 
 
 class S3Connector:
-    def __init__(self, access_key, secret_key):
-        self.access_key = access_key
-        self.secret_key = secret_key
-        self.s3 = boto3.resource("s3")
+    def __init__(self):
+        self.s3 = boto3.resource("s3", region_name=config_data["s3"]["region_name"])
 
     # upload cont to s3 bucket
     def _upload_file(self, file_name, bucket, object_name=None):
         if object_name is None:
             object_name = file_name
-        s3_client = boto3.client(
-            's3',
-            aws_access_key_id=self.access_key,
-            aws_secret_access_key=self.secret_key
-        )
         try:
-            response = s3_client.upload_file(self, file_name, bucket, object_name)
+            response = self.s3.upload_file(self, file_name, bucket, object_name)
         except Exception as e:
             print(e)
             return False
@@ -33,31 +38,42 @@ class S3Connector:
             return False
 
     def _read_file(self, file_name, bucket=None):
-        s3_client = boto3.client(
-            's3',
-            aws_access_key_id=self.access_key,
-            aws_secret_access_key=self.secret_key
-        )
+
         try:
             bucket = self.bucket_name if self.bucket_name is not None else bucket
-            response = s3_client.get_object(Bucket=bucket, Key=file_name)
+            response = self.s3.get_object(Bucket=bucket, Key=file_name)
             return response['Body'].read().decode('utf-8')
         except Exception as e:
             print(e)
             return False
 
     def _put_object(self, object_data, bucket, key):
-        s3_client = boto3.client(
-            's3',
-            aws_access_key_id=self.access_key,
-            aws_secret_access_key=self.secret_key
-        )
+
         try:
-            response = s3_client.put_object(Bucket=bucket, Body=object_data, Key=key)
+            response = self.s3.put_object(Bucket=bucket, Body=object_data, Key=key)
             return response
         except Exception as e:
             print(e)
             return False
+
+    @staticmethod
+    def get_secret():
+        secret_name = config_data["secret"]["secret_name"]
+        region_name = config_data["secret"]["region_name"]
+
+        # Create a Secrets Manager client
+        session = boto3.session.Session()
+        client = session.client(service_name='secretsmanager', region_name=region_name)
+
+        try:
+            get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+        except Exception as e:
+            print(f"Error retrieving secret: {e}")
+            raise e
+
+        # Decrypts secret using the associated KMS key.
+        secret = get_secret_value_response['SecretString']
+        return json.loads(secret)
 
     # def read_posts(self):
     #     return self._read_file(self.input_file, self.bucket_name)
