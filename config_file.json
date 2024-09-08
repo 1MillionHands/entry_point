@@ -5,7 +5,12 @@
     },
     "s3": {
         "access_key": "-----",
-        "secret_key": "-----"
+        "secret_key": "-----",
+        "region_name": "eu-north-1"
+    },
+    "secret": {
+        "secret_name": "kathrinethegod",
+        "region_name": "eu-north-1"
     },
     "sqs": {
         "access_key": "-----",

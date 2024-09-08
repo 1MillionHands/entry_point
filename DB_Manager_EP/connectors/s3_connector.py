@@ -6,7 +6,10 @@ import os
 current_dir = os.path.dirname(__file__)
 
 # Construct the path to the config file relative to the current script
-config_path = os.path.join(current_dir, '..', 'config_file.json')
+config_path = os.path.join(current_dir, '../../config_file.json')
+
+# Normalize the path (handles symbolic links, etc.)
+config_path = os.path.normpath(config_path)
 
 # Open and read the config file
 with open(config_path, 'r') as f:
@@ -93,3 +96,23 @@ class S3Connector:
     # def write_raw_posts(self, posts):
     #     """posts should be json string"""
     #     self._put_object(posts, self.bucket_name, self.input_file)
+
+if __name__ == "__main__":
+# from db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory,Volunteer, Base
+#
+
+    # Get the absolute path to the current script
+    current_dir = os.path.dirname(__file__)
+    print("1",current_dir)
+
+    # Construct the path to the config file relative to the current script
+    config_path = os.path.join(current_dir, '../config_file.json')
+    print("3",config_path)
+
+    # Normalize the path (handles symbolic links, etc.)
+    config_path = os.path.normpath(config_path)
+    print("1",config_path)
+
+    # is_test=False
+    # ob = DbService(is_test)
+    print("success")

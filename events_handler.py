@@ -1,7 +1,7 @@
 from utils import EventHandlerUtils
-import json
-from table_objects.post import PostHandler
+from DB_Manager_EP.table_objects.post import PostHandler
 from DB_Manager_EP.data_sources.active_fence.active_fence_ingestion import ActiveFenceIngest
+from DB_Manager_EP.data_sources.scooper.scooper_ingestion import ScooperIngestion
 
 
 class EventHandler:
@@ -16,6 +16,9 @@ class EventHandler:
 
         elif event[EventHandlerUtils.EVENT_NAME] == "activefence":
             ActiveFenceIngest(event).run()
+
+        elif event[EventHandlerUtils.EVENT_NAME] == "scooper":
+            ScooperIngestion(event).run()
 
         elif event[EventHandlerUtils.EVENT_NAME] == "creator":
             pass

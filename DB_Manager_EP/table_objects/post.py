@@ -6,7 +6,7 @@ import pandas as pd
 # Local application/library specific imports
 from DB_Manager_EP.db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory
 from utils import *
-from table_handler import TableHandler
+from DB_Manager_EP.table_handler import TableHandler
 from utils import PostUtils
 
 

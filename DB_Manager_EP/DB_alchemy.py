@@ -12,11 +12,15 @@ import os
 current_dir = os.path.dirname(__file__)
 
 # Construct the path to the config file relative to the current script
-config_path = os.path.join(current_dir, '..', 'config_file.json')
+config_path = os.path.join(current_dir, '../config_file.json')
 
-# Open and read the config file
+# Normalize the path (handles symbolic links, etc.)
+config_path = os.path.normpath(config_path)
+#
+# # Open and read the config file
 with open(config_path, 'r') as f:
   config_data = json.load(f)
+
 # with open('./config_file.json', 'r') as f:
 #   config_data = json.load(f)
 # with open(r'C:\Users\yanir\PycharmProjects\oneMilion\entry_point\DB_Manager_EP\config_file_.json', 'r') as f:
@@ -477,12 +481,25 @@ class DbService:
 
         return df_discrepancies
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
 # from db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory,Volunteer, Base
+#
 
-# is_test=False
-# ob = DbService(is_test)
+    # Get the absolute path to the current script
+    current_dir = os.path.dirname(__file__)
+    print("1",current_dir)
 
+    # Construct the path to the config file relative to the current script
+    config_path = os.path.join(current_dir, '../config_file.json')
+    print("3",config_path)
+
+    # Normalize the path (handles symbolic links, etc.)
+    config_path = os.path.normpath(config_path)
+    print("1",config_path)
+
+    # is_test=False
+    # ob = DbService(is_test)
+    print("success")
 # df = ob.get_schema_comparison()
 # print(df)
 
