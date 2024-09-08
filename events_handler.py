@@ -7,7 +7,7 @@ from DB_Manager_EP.data_sources.scooper.scooper_ingestion import ScooperIngestio
 class EventHandler:
 
     def run(self, event):
-        self.route_data_to_object(event)
+        return self.route_data_to_object(event)
 
     @staticmethod
     def route_data_to_object(event):
@@ -18,7 +18,9 @@ class EventHandler:
             ActiveFenceIngest(event).run()
 
         elif event[EventHandlerUtils.EVENT_NAME] == "scooper":
-            ScooperIngestion(event).run()
+            obj = ScooperIngestion(event)
+            obj.run()
+            return obj
 
         elif event[EventHandlerUtils.EVENT_NAME] == "creator":
             pass
