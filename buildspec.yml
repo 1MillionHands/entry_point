@@ -12,13 +12,13 @@ phases:
       - echo "Packaging Lambda function 1 (get_api_lambda_pack)..."
       - mkdir get_api_lambda_pack
       # Zip everything except the 'table_objects' directory
-      - zip -r9 get_api_lambda_pack.zip data_sources DB_Manager_EP requirements.txt lambda_function_raw_data.py
+      - zip -r9 get_api_lambda_pack.zip data_sources DB_Manager_EP requirements.txt lambda_function_raw_data.py config_file.json
 
       # Second Package: Packaging everything
       - echo "Packaging Lambda function 2 (all files)..."
       - mkdir full_lambda_package
       # Zip the entire directory including all files and folders
-      - zip -r9 full_lambda_package.zip data_sources DB_Manager_EP table_objects requirements.txt lambda_function_db.py
+      - zip -r9 full_lambda_package.zip data_sources DB_Manager_EP table_objects requirements.txt lambda_function_db.py config_file.json
 
   post_build:
     commands:

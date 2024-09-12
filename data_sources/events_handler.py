@@ -1,4 +1,4 @@
-from utils import EventHandlerUtils
+from data_sources.utils import EventHandlerUtils
 from data_sources.active_fence.active_fence_ingestion import ActiveFenceIngest
 from data_sources.scooper.scooper_ingestion import ScooperIngestion
 

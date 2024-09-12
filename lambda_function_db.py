@@ -1,5 +1,5 @@
 import sys
-from events_handler import EventHandler
+from table_objects.events_handler import EventHandler
 
 sys.path.append('opt/site-packages')
 
