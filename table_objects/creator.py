@@ -38,8 +38,8 @@ class CreatorHandler(TableHandler):
             self.update_db_insert(Creatort, creator)
 
             # update creators history
-            self.update_db_delete_insert(CreatorHistoryt, creator_history, CreatorUtils.INGESTION_TIMESTAMP_FIELD, [self.timestamp_partition_id])
-
+            self.update_db_delete_insert(CreatorHistoryt, creator_history, CreatorUtils.INGESTION_TIMESTAMP_FIELD,
+                                         [self.timestamp_partition_id])
 
     def run_from_circle(self):
         pass
@@ -56,10 +56,8 @@ class CreatorHandler(TableHandler):
         self.df_data = self.db_obj.query_table_orm(ScooperRowData, filters=filters, distinct=True, to_df=True,
                                                    columns=CreatorUtils.query_raw_data_fields)[0]
 
-
     print("here")
     print("here2")
-
 
     def transform(self):
 
@@ -85,9 +83,9 @@ class CreatorHandler(TableHandler):
 
         # The query_table_orm fun return ( df, invalid columns), so we take df that located in index 0
         # existing_creators = self.db_obj.query_table_orm(table_name=ScoperTemp, filters=filters, distinct=True, to_df=True)[0]
-        existing_creators = self.db_obj.query_table_orm(table_name=Creatort, filters=filters, distinct=True, to_df=True)[0]
+        existing_creators = \
+        self.db_obj.query_table_orm(table_name=Creatort, filters=filters, distinct=True, to_df=True)[0]
 
-        print(existing_creators.iloc[0:8,:].creator_name)
         if existing_creators is not None:
             self.df_data = self.df_data.merge(existing_creators, how='left', on=['creator_name', 'platform_name'])
 
@@ -97,25 +95,27 @@ class CreatorHandler(TableHandler):
 
             self.df_data['creator_id_x'] = self.set_creator_id(map_id_doesnt_exist, map_is_new_creator)
 
-            self.df_data.rename(columns={'creator_id_x': 'creator_id', 'sentiment_score_x': 'sentiment_score', 'creator_image_x': 'creator_image', 'creator_url_x': 'creator_url', 'language_x': 'language'}, inplace=True)
+            self.df_data.rename(columns={'creator_id_x': 'creator_id', 'sentiment_score_x': 'sentiment_score',
+                                         'creator_image_x': 'creator_image', 'creator_url_x': 'creator_url',
+                                         'language_x': 'language'}, inplace=True)
 
-            self.df_data.drop(columns=['sentiment_score_y', 'creator_image_y', 'creator_url_y', 'language_y'], inplace=True)
+            self.df_data.drop(columns=['sentiment_score_y', 'creator_image_y', 'creator_url_y', 'language_y'],
+                              inplace=True)
 
-            self.df_data[CreatorUtils.CREATOR_HISTORY_ID] = [str(uuid.uuid4()) for i in range(self.df_data.shape[0])]
+        self.df_data[CreatorUtils.CREATOR_HISTORY_ID] = [str(uuid.uuid4()) for i in range(self.df_data.shape[0])]
 
-            creator_current_cols = self.columns_exist_in_external_data(CreatorUtils.CREATOR_FIELDS, self.df_data.columns)
-            creators = self.df_data[self.df_data[CreatorUtils.CREATOR_ID_YEAR].isnull()][creator_current_cols]
-            # Correct null values by type
-            creators = creators.replace(np.nan, None)
-            creators = creators.replace({pd.NaT: None})
-            creators = creators.to_dict(orient='records')
+        creator_current_cols = self.columns_exist_in_external_data(CreatorUtils.CREATOR_FIELDS,
+                                                                   self.df_data.columns)
+        creators = self.df_data[self.df_data[CreatorUtils.CREATOR_ID_YEAR].isnull()][creator_current_cols]
+        # Correct null values by type
+        creators = creators.replace(np.nan, None)
+        creators = creators.replace({pd.NaT: None})
+        creators = creators.to_dict(orient='records')
 
-
-            creator_history_current_cols = self.columns_exist_in_external_data(CreatorUtils.CREATOR_HISTORY_VARIABLES,self.df_data.columns)
-            creators_history = self.df_data[creator_history_current_cols].to_dict(orient='records')
-            return creators, creators_history
-
-        return None, None
+        creator_history_current_cols = self.columns_exist_in_external_data(CreatorUtils.CREATOR_HISTORY_VARIABLES,
+                                                                           self.df_data.columns)
+        creators_history = self.df_data[creator_history_current_cols].to_dict(orient='records')
+        return creators, creators_history
 
 
     @staticmethod
@@ -129,9 +129,9 @@ class CreatorHandler(TableHandler):
     def set_creator_id(self, map_id_doesnt_exist, map_is_new_creator):
         id_lst = []
         for new_current_id, current_id, id_doesnt_exist, is_new_creator in zip(self.df_data['creator_id_x'].values,
-                                                                              self.df_data['creator_id_y'].values,
-                                                                              map_id_doesnt_exist.values,
-                                                                              map_is_new_creator.values):
+                                                                               self.df_data['creator_id_y'].values,
+                                                                               map_id_doesnt_exist.values,
+                                                                               map_is_new_creator.values):
 
             if id_doesnt_exist and is_new_creator:
                 id_lst.append(str(uuid.uuid4()))
@@ -150,7 +150,7 @@ class CreatorHandler(TableHandler):
             else:
                 return str.upper(media_name)
 
-    def update_db_insert(self, tbl_object = None, records= None):
+    def update_db_insert(self, tbl_object=None, records=None):
         """
         Updates the database by inserting new creators and posts, returning IDs for updates.
         :return: tuple (list, list) of post ID values to update and post history ID values to update
