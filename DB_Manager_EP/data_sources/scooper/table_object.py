@@ -11,30 +11,33 @@ class ScooperRowData(Base):
     __tablename__ = 'scooper_ingestion_raw_data'
     ingestion_timestamp = Column(TIMESTAMP, server_default=func.now())
     id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-    post_url = Column(String)
+    # The original url of the post itself - not the url of the host.
+    entity_url = Column(String)
     image_url = Column(String)
     engagement_score_view = Column(Numeric)
     source_country = Column(String)
+    # followers (base potential) that a person has
     reach = Column(Numeric)
     source_latitude = Column(String)
     source_country_code = Column(String)
-    facebook_likes = Column(Numeric)
+    # The original media url (not post) from which the post was written. When it equals to the host url, it means that
+    # the post was written by the host itself.
     media_url = Column(String)
+    facebook_likes = Column(Numeric)
     post_type = Column(String)
     twitter_shares = Column(Numeric)
     not_safe_for_work_level = Column(Numeric)
     content_snippet = Column(Text)
     indexed_datetime = Column(DateTime, nullable=True)
-    entity_urls = Column(String)
-    source_types_list = Column(String)
+    entity_urls = Column(ARRAY(String))
+    source_types = Column(String)
     published_datetime = Column(DateTime, nullable=True)
     source_longitude = Column(String)
     title_snippet = Column(Text)
     parent_url = Column(String)
     scooper_tags = Column(String)
     sentiment_score = Column(Numeric)
-    author_gender = Column(String)
-    host_url = Column(String)
+    creator_gender = Column(String)
     facebook_shares = Column(Numeric)
     semrush_pageviews = Column(Numeric)
     search_indexed_datetime = Column(String, nullable=True)
@@ -44,28 +47,25 @@ class ScooperRowData(Base):
     title = Column(Text)
     matched_profile = Column(String)
     content = Column(Text)
-    alexa_pageviews = Column(Numeric)
     cluster_id = Column(String)
     word_count = Column(Numeric)
     num_comments = Column(Numeric)
     indexed_ts = Column(TIMESTAMP)
     language = Column(String)
-    author_name = Column(String)
+    creator_name = Column(String)
     facebook_reactions_total = Column(Numeric)
     source_continent = Column(String)
-    url = Column(String)
     semrush_unique_visitors = Column(Numeric)
-    author_id = Column(String)
-    alexa_unique_visitors = Column(Numeric)
+    creator_id = Column(String)
     source_region = Column(String)
     doc_score_avee = Column(Numeric)
     source_city = Column(String)
     porn_level = Column(Numeric)
-    author_url = Column(String)
-    author_image_url = Column(String)
+    creator_url = Column(String)
+    creator_image = Column(String)
     youtube_views = Column(Numeric)
     youtube_likes = Column(Numeric)
-    author_short_name = Column(String)
+    creator_short_name = Column(String)
     article_continent = Column(String)
     article_country = Column(String)
     article_latitude = Column(String)
@@ -75,13 +75,14 @@ class ScooperRowData(Base):
     article_longitude = Column(String)
     article_country_code = Column(String)
     provider = Column(String)
-
+    # todo - add the platform name or edit the source_type
+    
 class Utils:
 
     INGESTION_COLUMN_NAMES = {
-        'root_url': 'post_url',
+        'root_url': 'entity_url',
         'images.url': 'image_url',
-        'engagement': 'engagement_score_view',
+        'engagement': 'engagement_score_view', #sum of all kpi's
         'extra_source_attributes.world_data.country': 'source_country',
         'reach': 'reach',
         'extra_source_attributes.world_data.latitude': 'source_latitude',
@@ -94,15 +95,13 @@ class Utils:
         'content_snippet': 'content_snippet',
         'indexed': 'indexed_datetime',
         'entity_urls': 'entity_urls',
-        'source_type': 'source_types_list',
+        'source_type': 'source_types',
         'published': 'published_datetime',
         'extra_source_attributes.world_data.longitude': 'source_longitude',
         'title_snippet': 'title_snippet',
-        'parent_url': 'parent_url',
         'tags_internal': 'scooper_tags',
         'sentiment': 'sentiment_score',
-        'extra_author_attributes.gender': 'author_gender',
-        'host_url': 'host_url',
+        'extra_creator_attributes.gender': 'creator_gender',
         'article_extended_attributes.facebook_shares': 'facebook_shares',
         'source_extended_attributes.semrush_pageviews': 'semrush_pageviews',
         'search_indexed': 'search_indexed_datetime',
@@ -112,28 +111,25 @@ class Utils:
         'title': 'title',
         'matched_profile': 'matched_profile',
         'content': 'content',
-        'source_extended_attributes.alexa_pageviews': 'alexa_pageviews',
         'cluster_id': 'cluster_id',
         'word_count': 'word_count',
         'article_extended_attributes.num_comments': 'num_comments',
         'indexed_ts': 'indexed_ts',
         'lang': 'language',
-        'extra_author_attributes.name': 'author_name',
+        'extra_creator_attributes.name': 'creator_name',
         'article_extended_attributes.facebook_reactions_total': 'facebook_reactions_total',
         'extra_source_attributes.world_data.continent': 'source_continent',
-        'url': 'url',
         'source_extended_attributes.semrush_unique_visitors': 'semrush_unique_visitors',
-        'extra_author_attributes.id': 'author_id',
-        'source_extended_attributes.alexa_unique_visitors': 'alexa_unique_visitors',
+        'extra_creator_attributes.id': 'creator_id',
         'extra_source_attributes.world_data.region': 'source_region',
         'docscore.avee': 'doc_score_avee',
         'extra_source_attributes.world_data.city': 'source_city',
         'porn_level': 'porn_level',
-        'extra_author_attributes.url': 'author_url',
-        'extra_author_attributes.image_url': 'author_image_url',
+        'extra_creator_attributes.url': 'creator_url',
+        'extra_creator_attributes.image_url': 'creator_image',
         'article_extended_attributes.youtube_views': 'youtube_views',
         'article_extended_attributes.youtube_likes': 'youtube_likes',
-        'extra_author_attributes.short_name': 'author_short_name',
+        'extra_creator_attributes.short_name': 'creator_short_name',
         'extra_article_attributes.world_data.continent': 'article_continent',
         'extra_article_attributes.world_data.country': 'article_country',
         'extra_article_attributes.world_data.latitude': 'article_latitude',
@@ -154,13 +150,11 @@ class Utils:
                         'sentiment_score',
                         'facebook_shares',
                         'semrush_pageviews',
-                        'alexa_pageviews',
                         'cluster_id',
                         'word_count',
                         'num_comments',
                         'facebook_reactions_total',
                         'semrush_unique_visitors',
-                        'alexa_unique_visitors',
                         'doc_score_avee',
                         'source_city',
                         'porn_level',

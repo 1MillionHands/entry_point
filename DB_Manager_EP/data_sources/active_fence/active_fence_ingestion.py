@@ -38,7 +38,7 @@ class ActiveFenceIngest(TableHandler):
         self.df_data = self.df_data.iloc[0:1000,:]
 
     # insert data base
-    def update_db(self):
+    def update_db_insert(self):
         try:
             if not self.db_obj.check_table_exists(ActiveFenceRowData.__tablename__):
                 raise Exception(f"table {self.table_object} currently not exists in the data base")

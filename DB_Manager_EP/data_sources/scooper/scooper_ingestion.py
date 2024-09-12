@@ -24,7 +24,6 @@ class ScooperIngestion(TableHandler):
         tz = timezone('EST')
         curr_timestamp = datetime.now(tz)
         self.running_timestamp_id = curr_timestamp
-        # self.running_timestamp_id = None
 
     @staticmethod
     def validate_event(event,):
@@ -54,7 +53,6 @@ class ScooperIngestion(TableHandler):
     def transform_date(self):
         print("Transforming data...")
         entries = [entry[JSON_ENTRY_KEY] for entry in self.json_data[0]['entries']]
-        # self.df_data = pd.DataFrame(self.json_data[0])
 
         self.df_data = pd.DataFrame(entries)
         self.set_new_columns()
@@ -66,12 +64,12 @@ class ScooperIngestion(TableHandler):
         self.df_data['id'] = [str(str(uuid.uuid4())) for i in range(self.df_data.shape[0])]
 
         tz = timezone('EST')
-        curr_timestamp = datetime.now(tz)
+        curr_timestamp = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         self.df_data['ingestion_timestamp'] = curr_timestamp
         self.running_timestamp_id = curr_timestamp
 
     # insert data base
-    def update_db(self):
+    def update_db_insert(self):
         print("Inserting data into db...")
         try:
             if not self.db_obj.check_table_exists(ScooperRowData.__tablename__):

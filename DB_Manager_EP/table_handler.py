@@ -19,7 +19,7 @@ class TableHandler:
         self.q = SQSConnector()
         self.s3object = S3Connector()
 
-    def run(self):
+    def run(self, run_type=None):
         print("Extracting data...")
         self.extract_data()
         print("Validating data...")
@@ -27,7 +27,7 @@ class TableHandler:
         print("Transforming data...")
         self.transform_date()
         print("Inserting data into db...")
-        self.update_db()
+        self.update_db_insert()
 
     def upload_to_s3(self, filename):
         try:
@@ -36,7 +36,10 @@ class TableHandler:
         except Exception as e:
             print("FAILED", e)
 
-    def update_db(self):
+    def update_db_insert(self, tbl_object=None, records=None):
+        pass
+
+    def update_db_delete_insert(self):
         pass
 
     def extract_data(self):
@@ -46,6 +49,9 @@ class TableHandler:
         pass
 
     def transform_date(self):
+        pass
+
+    def transform(self):
         pass
 
     def send_messages(self, messages):

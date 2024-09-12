@@ -1,8 +1,4 @@
 {
-    "twitter": {
-        "username": "-----",
-        "password": "-----"
-    },
     "s3": {
         "access_key": "-----",
         "secret_key": "-----",
@@ -11,11 +7,6 @@
     "secret": {
         "secret_name": "kathrinethegod",
         "region_name": "eu-north-1"
-    },
-    "sqs": {
-        "access_key": "-----",
-        "secret_key": "-----",
-        "queue_url": "-----"
     },
     "scraping": {
         "interval_hours": 10,
@@ -32,10 +23,6 @@
         "host":"one-million-hands-db.cwmohwgxidvc.eu-north-1.rds.amazonaws.com",
         "port":5432,
         "dbInstanceIdentifier":"one-million-hands-db"
-    },
-	"letBotsWorkToekn": "-----",
-	"schedule": {
-		"hours": 12
-	}
+    }
 
 }

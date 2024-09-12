@@ -20,7 +20,7 @@ class Post(Base):
     description = Column(String, default='')
     content = Column(String, default='')
     type = Column(String, default='')
-    sentiment = Column(String)  # -1 pro Gaza 0 Neutral 1 pro Israel
+    sentiment_score = Column(String)  # -1 pro Gaza 0 Neutral 1 pro Israel
     media_url = Column(String, default='')
     image_url = Column(String, default='')
     is_live = Column(Boolean, default=True)
@@ -52,9 +52,9 @@ class PostHistory(Base):
     post_id = Column(String, ForeignKey('Post.post_id'))
     num_of_likes = Column(Integer, default=0)
     num_of_views = Column(Integer, default=0)
-    timestamp = Column(DateTime, default=datetime(2000, 1, 1))  # last scrape time
+    ingestion_timestamp = Column(DateTime, default=datetime(2000, 1, 1))  # last scrape time
     scrape_status = Column(String, default='unscraped')
-    curr_engagement = Column(Integer, default=0)
+    engagement_score_view = Column(Float, default=0)
     num_of_comments = Column(Integer, default=0)
     video_play_count = Column(Integer, default=0)
     video_view_count = Column(Integer, default=0)
@@ -65,9 +65,9 @@ class Creatort(Base):
     __tablename__ = 'Creator'
 
     creator_id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-    name = Column(String, default='no_name')
+    creator_name = Column(String, default='no_name')
     num_of_deleted_posts = Column(Integer, default=0)
-    sentiment = Column(Integer, default=0)
+    sentiment_score = Column(Integer, default=0)
     creator_image = Column(String)
     creator_url = Column(String, default='')
     niche = Column(String, default='')
@@ -77,8 +77,18 @@ class Creatort(Base):
     hashtag_list = Column(String, default='')
     engagement_history = Column(String, default='')
     last_post_date = Column(DateTime, default=datetime(2000, 1, 1))
-    platform_type = Column(String, default=str(uuid.uuid4()))
+    platform_name = Column(String, default=str(uuid.uuid4()))
 
+class ScoperTemp(Base):
+    __tablename__ = 'temp_scooper'
+
+    creator_id = Column(String, primary_key=True, default=str(uuid.uuid4()))
+    creator_name = Column(String, default='no_name')
+    sentiment_score = Column(Integer, default=0)
+    creator_image = Column(String)
+    creator_url = Column(String, default='')
+    language = Column(String, default='')  # maybe list
+    platform_name = Column(String, default=str(uuid.uuid4()))
 
 class CreatorHistoryt(Base):
     __tablename__ = 'CreatorHistory'
@@ -88,7 +98,7 @@ class CreatorHistoryt(Base):
     owner_post_count = Column(Integer, default=0)
     owner_follower_count = Column(Integer, default=0)
     creator_score = Column(Integer, default=0)
-    created_at = Column(TIMESTAMP, server_default=func.now())
+    ingestion_timestamp = Column(TIMESTAMP, server_default=func.now())
 
 
 # class MetaDataBuckett(Base):
@@ -120,13 +130,13 @@ class Volunteer(Base):
 #   __table_args__ = {'mysql_engine': 'InnoDB'}
 #
 #   id = Column(Integer, primary_key=True)
-#   created_at = Column('created_at', DateTime, nullable=False)
+#   ingestion_timestamp = Column('ingestion_timestamp', DateTime, nullable=False)
 #   updated_at = Column('updated_at', DateTime, nullable=False)
 #
 #   @staticmethod
 #   def create_time(instance):
 #      now = datetime.datetime.utcnow()
-#      instance.created_at = now
+#      instance.ingestion_timestamp = now
 #      instance.updated_at = now
 #
 #   @staticmethod

@@ -328,34 +328,39 @@ class DbService:
         inspector = inspect(self.engine)
         return table_name in inspector.get_table_names(schema=self.SCHEMA)
 
-    # todo: separate delete and trunc
-    def delete_or_truncate_table(self, table_name, action="trunc"):
-        """
-        Deletes or truncates the specified table.
-
-        :param table_name: The name of the table to delete or truncate.
-        :param action: The action to perform ("del" for delete or "trunc" for truncate).
-        """
-        if not self.check_table_exists(table_name):
-            print(f"Table {table_name} does not exist.")
-            return
-
-        metadata = MetaData()
-        metadata.reflect(bind=self.engine, schema=self.SCHEMA)  # todo: explain line if you can
-        table = Table(table_name, metadata, autoload_with=self.engine)
-
-        try:
-            if action == "del":
-                table.drop(self.engine)
-                print(f"Table {table_name} deleted successfully.")
-            elif action == "trunc":
-                with self.engine.begin() as connection:
-                    connection.execute(text(f"TRUNCATE TABLE {self.SCHEMA}.{table_name} RESTART IDENTITY CASCADE"))
-                print(f"Table {table_name} truncated successfully.")
-            else:
-                print(f"Invalid action: {action}. Please specify 'del' or 'trunc'.")
-        except Exception as e:
-            print(f"An error occurred while performing the action {action} on the table {table_name}: {str(e)}")
+    def delete_table(self, tbl_obj, field_id, id_list):
+        with self.get_db() as session:
+            try:
+                session.query(tbl_obj).filter(getattr(tbl_obj, field_id).in_(id_list)).delete()
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                raise e
+    # # todo: separate delete and trunc
+    # def delete_records(self, table_name, **kwargs):
+    #     """
+    #     Deletes records from the specified table based on the given keys and values.
+    #     :param table_name: The name of the table to delete records from.
+    #     :param kwargs: Key-value pairs to filter records.
+    #     """
+    #     if not self.check_table_exists(table_name):
+    #         print(f"Table {table_name} does not exist.")
+    #         return
+    #
+    #     metadata = MetaData()
+    #     metadata.reflect(bind=self.engine, schema=self.SCHEMA)
+    #     table = Table(table_name, metadata, autoload_with=self.engine)
+    #
+    #     try:
+    #         query = table.delete()
+    #         for key, value in kwargs.items():
+    #             query = query.where(getattr(table.c, key) == value)
+    #
+    #         with self.engine.begin() as connection:
+    #             result = connection.execute(query)
+    #             print(f"{result.rowcount} records deleted from table {table_name} successfully.")
+    #     except Exception as e:
+    #         print(f"An error occurred while deleting records from table {table_name}: {str(e)}")
 
     def update_table(self, table_name, content, headers):
         pass
@@ -364,12 +369,16 @@ class DbService:
         # self.engine.
         pass
 
-    def filter_query_table(self, table_class, filter_column, filter_values, distinct=False, to_df=False):
+    def filter_query_table(self, table_class, filter_column, filter_values, distinct=False, to_df=False, columns=None):
         # table_class.metadata.schema = self.SCHEMA
         with self.get_db() as session:
             filter_list = [col.in_(vals) for col, vals in zip(filter_column, filter_values)]
             print(filter_list)
             query = session.query(table_class).filter(*filter_list)
+
+            if columns is not None:
+                query = query.with_entities(*columns)
+
             if distinct:
                 query = query.distinct()
 
