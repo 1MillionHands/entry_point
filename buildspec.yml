@@ -30,8 +30,3 @@ phases:
       - echo Deploying Lambda function 2...
       - aws lambda update-function-code --function-name BiDataProcessLevel --zip-file fileb://full_lambda_package.zip
       - echo "DONE!!"
-
-  artifacts:
-    files:
-      - get_api_lambda_pack.zip
-      - full_lambda_package.zip
