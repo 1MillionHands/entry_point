@@ -38,5 +38,5 @@ class EventHandler:
     #     config_data = json.load(f)
     #     f.close()
     # obj = EventHandler()
-    # obj.run({'event_name': 'get_posts', 'test_env_status': True, 'body': '2024-09-08 15:11:26.610'})
-    # print("")
+    # obj.run({'event_name': 'scooper', 'test_env_status': True, 'bucket_name': 'data-omhds', 'input_file': 'test/scooper_imports/2024/09/12/_scooper.json'})
+

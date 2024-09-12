@@ -25,7 +25,7 @@ class TableHandler:
         print("Validating data...")
         self.validate_date()
         print("Transforming data...")
-        self.transform_date()
+        self.transform()
         print("Inserting data into db...")
         self.update_db_insert()
 
@@ -46,9 +46,6 @@ class TableHandler:
         pass
 
     def validate_date(self):
-        pass
-
-    def transform_date(self):
         pass
 
     def transform(self):

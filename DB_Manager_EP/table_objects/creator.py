@@ -6,7 +6,7 @@ import pandas as pd
 
 import utils
 # Local application/library specific imports
-from DB_Manager_EP.db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory, ScoperTemp
+from DB_Manager_EP.db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory
 from DB_Manager_EP.data_sources.scooper.table_object import ScooperRowData
 from utils import *
 from DB_Manager_EP.table_handler import TableHandler
@@ -151,7 +151,7 @@ class CreatorHandler(TableHandler):
             else:
                 return str.upper(media_name)
 
-    def update_db_insert(self, tbl_object, records):
+    def update_db_insert(self, tbl_object = None, records= None):
         """
         Updates the database by inserting new creators and posts, returning IDs for updates.
         :return: tuple (list, list) of post ID values to update and post history ID values to update

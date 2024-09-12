@@ -336,31 +336,6 @@ class DbService:
             except Exception as e:
                 session.rollback()
                 raise e
-    # # todo: separate delete and trunc
-    # def delete_records(self, table_name, **kwargs):
-    #     """
-    #     Deletes records from the specified table based on the given keys and values.
-    #     :param table_name: The name of the table to delete records from.
-    #     :param kwargs: Key-value pairs to filter records.
-    #     """
-    #     if not self.check_table_exists(table_name):
-    #         print(f"Table {table_name} does not exist.")
-    #         return
-    #
-    #     metadata = MetaData()
-    #     metadata.reflect(bind=self.engine, schema=self.SCHEMA)
-    #     table = Table(table_name, metadata, autoload_with=self.engine)
-    #
-    #     try:
-    #         query = table.delete()
-    #         for key, value in kwargs.items():
-    #             query = query.where(getattr(table.c, key) == value)
-    #
-    #         with self.engine.begin() as connection:
-    #             result = connection.execute(query)
-    #             print(f"{result.rowcount} records deleted from table {table_name} successfully.")
-    #     except Exception as e:
-    #         print(f"An error occurred while deleting records from table {table_name}: {str(e)}")
 
     def update_table(self, table_name, content, headers):
         pass

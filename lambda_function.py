@@ -10,13 +10,13 @@ def extract_s3_info(event):
         # The S3 event is in 'Records' -> first record -> 's3' -> 'bucket' and 'object'
         bucket = event['Records'][0]['s3']['bucket']['name']
         key = event['Records'][0]['s3']['object']['key']
-        event_name = key.split('/').split('.')[0]
+        event_name = key.split('/')[-1].split('.')[0]
         test_env_status = key.split('/')[0] == 'test'
 
         new_event = {
             'event_name': event_name
             , 'bucket_name': bucket
-            , 'input_file': 'scooper_imports/2024/09/08/scooper.json'
+            , 'input_file': key
             , 'test_env_status': test_env_status
             , 'output_file': ''
         }
@@ -29,10 +29,12 @@ def extract_s3_info(event):
 
 
 def compile_event_payload(event):
-    if event['body']['temp'] is not None:
-        event['body'] = event['temp']
-    elif event['Records'] is not None:
+    if event['Records'] is not None:
         event = extract_s3_info(event)
+
+    elif event['body']['temp'] is not None:
+        event['body'] = event['temp']
+
     else:
         event = None
 
@@ -42,7 +44,7 @@ def compile_event_payload(event):
 def lambda_handler(event, context):
     # data = None
     #
-    # print("the original event", event)
+    print("the original event", event)
     custom_payload = compile_event_payload(event)
     if custom_payload == None:
         raise Exception("Invalid event structure")
@@ -50,7 +52,7 @@ def lambda_handler(event, context):
     if custom_payload["test_env_status"]:
         obj = EventHandler()
         pyload = obj.run(custom_payload)
-        print("")
+        print(pyload)
     else:
         print("success")
 

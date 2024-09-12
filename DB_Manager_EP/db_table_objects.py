@@ -79,16 +79,6 @@ class Creatort(Base):
     last_post_date = Column(DateTime, default=datetime(2000, 1, 1))
     platform_name = Column(String, default=str(uuid.uuid4()))
 
-class ScoperTemp(Base):
-    __tablename__ = 'temp_scooper'
-
-    creator_id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-    creator_name = Column(String, default='no_name')
-    sentiment_score = Column(Integer, default=0)
-    creator_image = Column(String)
-    creator_url = Column(String, default='')
-    language = Column(String, default='')  # maybe list
-    platform_name = Column(String, default=str(uuid.uuid4()))
 
 class CreatorHistoryt(Base):
     __tablename__ = 'CreatorHistory'
@@ -101,22 +91,6 @@ class CreatorHistoryt(Base):
     ingestion_timestamp = Column(TIMESTAMP, server_default=func.now())
 
 
-# class MetaDataBuckett(Base):
-#     __tablename__ = 'meta_data_bucket'
-#
-#     id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-#     source_fk = Column(String, ForeignKey('meta_data_sources.id'))
-#     date = Column(DateTime)
-#     content = Column(String)
-#
-#
-# class MetaDataSourcest(Base):
-#     __tablename__ = 'meta_data_sources'
-#
-#     id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-#     name = Column(String)
-#     url = Column(String)
-
 class Volunteer(Base):
     __tablename__ = 'meta_data_sources'
 
@@ -124,27 +98,3 @@ class Volunteer(Base):
     first_name = Column(String)
     last_name = Column(String)
     url = Column(String)
-
-# class BaseMixin(object):
-#
-#   __table_args__ = {'mysql_engine': 'InnoDB'}
-#
-#   id = Column(Integer, primary_key=True)
-#   ingestion_timestamp = Column('ingestion_timestamp', DateTime, nullable=False)
-#   updated_at = Column('updated_at', DateTime, nullable=False)
-#
-#   @staticmethod
-#   def create_time(instance):
-#      now = datetime.datetime.utcnow()
-#      instance.ingestion_timestamp = now
-#      instance.updated_at = now
-#
-#   @staticmethod
-#   def update_time(instance):
-#      now = datetime.datetime.utcnow()
-#      instance.updated_at = now
-#
-#   @classmethod
-#   def register(cls):
-#      event.listen(cls, 'before_insert', cls.create_time)
-#      event.listen(cls, 'before_update', cls.update_time)

@@ -14,7 +14,6 @@ class EventHandlerUtils:
 
     page_size = 500
 
-
 class PostUtils:
     POST_HISTORY_ID = 'post_history_id'
 
@@ -22,7 +21,7 @@ class PostUtils:
 
     INGESTION_TIMESTAMP_FIELD = 'ingestion_timestamp'
 
-     # * the name are after preprocess
+     # the name are after preprocess
     POST_HISTORY_VARIABLES = [ 'ingestion_timestamp', 'engagement_score_view',  'post_id', 'post_history_id']
     POST_VARIABLES = ['url', 'publish_date', 'location', 'content', 'type', 'media_url', 'image_url', 'sentiment_score',
                       'post_id', 'creator_id']
@@ -33,6 +32,7 @@ class PostUtils:
                                   'image_url', 'sentiment_score', 'creator_id', 'engagement_score_view',
                                   'ingestion_timestamp'
                                   ]
+
     map_from_field_name_from_scooper = {
         'parent_url': 'url',
         'publish_date': 'publish_date',
@@ -50,25 +50,9 @@ class PostUtils:
 
     SUCCESS = "SUCCESS"
 
-    platform_mapping = {
-        'linkedin': 'LINKEDIN',
-        'Linkedin': 'LINKEDIN',
-        'instagram': 'INSTAGRAM',  # Typo corrected to 'instagram'
-        'Instagram': 'INSTAGRAM',
-        'youtube': 'YOUTUBE',
-        'Youtube': 'YOUTUBE',
-        'twitter': 'TWITTER',
-        'Twitter': 'TWITTER',
-        'facebook': 'FACEBOOK',
-        'Facebook': 'FACEBOOK',
-        'tiktok': 'TIKTOK',
-        'Tiktok': 'TIKTOK'
-    }
-
     NEW_CREATORS_INDICATOR = 'new_creators_indicator'
 
     location_fields = ['source_country', 'source_country_code',  'source_region', 'source_city', 'source_latitude', 'source_longitude']
-
 
 
 class CreatorUtils:

@@ -226,12 +226,3 @@ class PostHandler(TableHandler):
         # post_id_values_to_update = list(new_posts[PostUtils.POST_ID])
         # post_history_id_values_to_update = list(self.df_data[PostUtils.POST_HISTORY_ID])
         # return post_id_values_to_update, post_history_id_values_to_update
-
-# if __name__ == '__main__':
-#     let_bot = LetBotWork(config_data)
-#     ep = EntryPoint(let_bot)
-#     ep.get_posts()
-#     while True:
-#         print(f"initating scheduler every {config_data['schedule']['hours']} hours")
-#         run_pending()
-#         sleep(5)
