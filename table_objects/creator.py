@@ -106,7 +106,11 @@ class CreatorHandler(TableHandler):
 
         creator_current_cols = self.columns_exist_in_external_data(CreatorUtils.CREATOR_FIELDS,
                                                                    self.df_data.columns)
-        creators = self.df_data[self.df_data[CreatorUtils.CREATOR_ID_YEAR].isnull()][creator_current_cols]
+        if existing_creators is not None:
+            creators = self.df_data[self.df_data[CreatorUtils.CREATOR_ID_YEAR].isnull()][creator_current_cols]
+        else:
+            creators = self.df_data[creator_current_cols]
+
         # Correct null values by type
         creators = creators.replace(np.nan, None)
         creators = creators.replace({pd.NaT: None})
