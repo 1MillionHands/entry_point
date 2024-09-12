@@ -31,7 +31,7 @@ class CreatorHandler(TableHandler):
         """
 
         self.query_raw_data()
-        creator, creator_history, regen_creator_id = self.transform()
+        creator, creator_history = self.transform()
 
         if creator is not None and creator_history is not None:
             # update creators
