@@ -56,9 +56,6 @@ class CreatorHandler(TableHandler):
         self.df_data = self.db_obj.query_table_orm(ScooperRowData, filters=filters, distinct=True, to_df=True,
                                                    columns=CreatorUtils.query_raw_data_fields)[0]
 
-    print("here")
-    print("here2")
-
     def transform(self):
 
         self.df_data['platform_name'] = self.df_data.media_url.apply(lambda x: self.extract_platform_name(x))
