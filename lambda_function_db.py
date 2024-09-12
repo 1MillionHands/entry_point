@@ -3,19 +3,23 @@ from table_objects.events_handler import EventHandler
 
 sys.path.append('opt/site-packages')
 
+
 def compile_event_payload(event):
-    if event['body'] is not None:
-        event['body'] = event['temp']
-        new_event = {
-            'event_name': event['event_name']
-            , 'test_env_status': event['test_env_status']
-            , 'id':  event['body']
-        }
+    if 'responsePayload' in list(event.keys()):
+        if 'event' in list(event['responsePayload'].keys()):
+            if event['responsePayload']['event'] is not None:
+                event_ = event['responsePayload']['event']
+
+                new_event = {
+                    'event_name': event_['event_name']
+                    , 'test_env_status': event_['test_env_status']
+                    , 'id': event_['id']
+                }
+
+                return new_event
 
     else:
         new_event = None
-
-    return new_event
 
 
 def lambda_handler(event, context):
@@ -32,10 +36,10 @@ def lambda_handler(event, context):
     else:
         print("success")
     return {
-            'statusCode': 200,  # HTTP status code
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': pyload
-        }
+        'statusCode': 200,  # HTTP status code
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': pyload
+    }

@@ -60,7 +60,9 @@ def lambda_handler(event, context):
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             },
-            'body': pyload,
+            'event': {
+            'id': pyload,
             'test_env_status': custom_payload["test_env_status"],
             'event_name': 'run_from_scooper'
+            }
         }

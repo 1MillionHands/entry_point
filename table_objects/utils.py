@@ -41,6 +41,7 @@ class PostUtils:
 
     location_fields = ['source_country', 'source_country_code',  'source_region', 'source_city', 'source_latitude', 'source_longitude']
 
+    TIMESTAMP_PARTITION_ID = 'id'
 
 class CreatorUtils:
     query_raw_data_fields = [
@@ -83,3 +84,5 @@ class CreatorUtils:
     INGESTION_TIMESTAMP_FIELD = 'ingestion_timestamp'
 
     is_numeric = ['', '', '']
+
+    TIMESTAMP_PARTITION_ID = 'id'

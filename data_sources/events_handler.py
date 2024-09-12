@@ -10,7 +10,7 @@ class EventHandler:
 
     @staticmethod
     def route_data_to_object(event):
-        if event[EventHandlerUtils.EVENT_NAME] == "scooper":
+        if event[EventHandlerUtils.EVENT_NAME] == "scooper" or "scooper" in event[EventHandlerUtils.EVENT_NAME]:
             obj = ScooperIngestion(event)
             obj.run()
             return obj.running_timestamp_id

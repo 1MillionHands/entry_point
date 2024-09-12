@@ -15,7 +15,7 @@ class PostHandler(TableHandler):
 
     def __init__(self, event):
         super().__init__(event)
-        self.timestamp_partition_id = event["id"]
+        self.timestamp_partition_id = event[PostUtils.TIMESTAMP_PARTITION_ID]
 
     def run(self, run_type=None):
 

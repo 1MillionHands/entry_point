@@ -15,7 +15,7 @@ class CreatorHandler(TableHandler):
 
     def __init__(self, event):
         super().__init__(event)
-        self.timestamp_partition_id = event["body"]
+        self.timestamp_partition_id = event[CreatorUtils.TIMESTAMP_PARTITION_ID]
 
     def run(self, run_type=None):
 
