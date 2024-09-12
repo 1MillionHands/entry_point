@@ -4,11 +4,10 @@ import numpy as np
 # Third-party libraries
 import pandas as pd
 
-import utils
 # Local application/library specific imports
-from DB_Manager_EP.db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory
-from DB_Manager_EP.data_sources.scooper.table_object import ScooperRowData
-from utils import *
+from DB_Manager_EP.db_table_objects import Creatort, CreatorHistoryt
+from data_sources.scooper.table_object import ScooperRowData
+from table_objects.utils import CreatorUtils
 from DB_Manager_EP.table_handler import TableHandler
 
 
@@ -39,7 +38,7 @@ class CreatorHandler(TableHandler):
             self.update_db_insert(Creatort, creator)
 
             # update creators history
-            self.update_db_delete_insert(CreatorHistoryt, creator_history, utils.CreatorUtils.INGESTION_TIMESTAMP_FIELD, [self.timestamp_partition_id])
+            self.update_db_delete_insert(CreatorHistoryt, creator_history, CreatorUtils.INGESTION_TIMESTAMP_FIELD, [self.timestamp_partition_id])
 
 
     def run_from_circle(self):
@@ -48,14 +47,14 @@ class CreatorHandler(TableHandler):
     def query_raw_data(self):
         filters = [
             {
-                # "column": utils.CreatorUtils.INGESTION_TIMESTAMP_FIELD,
+                # "column": utils.CreatorINGESTION_TIMESTAMP_FIELD,
                 "column": "ingestion_timestamp",
                 "values": [self.timestamp_partition_id],
                 "op": "in"
             }
         ]
         self.df_data = self.db_obj.query_table_orm(ScooperRowData, filters=filters, distinct=True, to_df=True,
-                                                   columns=utils.CreatorUtils.query_raw_data_fields)[0]
+                                                   columns=CreatorUtils.query_raw_data_fields)[0]
 
 
     print("here")
@@ -66,7 +65,7 @@ class CreatorHandler(TableHandler):
 
         self.df_data['platform_name'] = self.df_data.media_url.apply(lambda x: self.extract_platform_name(x))
         self.df_data.drop(columns='media_url', inplace=True)
-        self.df_data.drop_duplicates(subset=utils.CreatorUtils.primary_key, inplace=True)
+        self.df_data.drop_duplicates(subset=CreatorUtils.primary_key, inplace=True)
 
         # Drop nulls rows
         self.df_data = self.df_data.dropna(how='all')
@@ -146,7 +145,7 @@ class CreatorHandler(TableHandler):
     def extract_platform_name(x):
         if x is not None:
             media_name = x.split("/")[2].split('.')[0]
-            if str.lower(media_name) not in utils.CreatorUtils.valid_platforms:
+            if str.lower(media_name) not in CreatorUtils.valid_platforms:
                 return None
             else:
                 return str.upper(media_name)

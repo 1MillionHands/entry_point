@@ -1,20 +1,7 @@
-import json
-
-HISTORY_IDS = "posts_history_id_list"
-POSTS_NUM = 50
-POST_IDS = "posts_id_list"
-
-
-class EventHandlerUtils:
-    EVENT_NAME = 'event_name'
-
-    SUCCESS_RESPONSE = 200
-
-    SUCCESS = "SUCCESS"
-
-    page_size = 500
 
 class PostUtils:
+    POSTS_NUM = 500
+
     POST_HISTORY_ID = 'post_history_id'
 
     POST_ID = 'post_id'

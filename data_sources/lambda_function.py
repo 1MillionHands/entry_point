@@ -1,5 +1,5 @@
-from events_handler import EventHandler
 import sys
+from events_handler import EventHandler
 
 sys.path.append('opt/site-packages')
 
@@ -31,10 +31,6 @@ def extract_s3_info(event):
 def compile_event_payload(event):
     if event['Records'] is not None:
         event = extract_s3_info(event)
-
-    elif event['body']['temp'] is not None:
-        event['body'] = event['temp']
-
     else:
         event = None
 
@@ -46,6 +42,7 @@ def lambda_handler(event, context):
     #
     print("the original event", event)
     custom_payload = compile_event_payload(event)
+
     if custom_payload == None:
         raise Exception("Invalid event structure")
 
@@ -63,5 +60,7 @@ def lambda_handler(event, context):
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             },
-            'body': pyload
+            'body': pyload,
+            'test_env_status': custom_payload["test_env_status"],
+            'event_name': 'run_from_scooper'
         }

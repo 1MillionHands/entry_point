@@ -2,21 +2,20 @@ import uuid
 
 # Third-party libraries
 import pandas as pd
+import json
 
-import utils
 # Local application/library specific imports
-from DB_Manager_EP.db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory
-from DB_Manager_EP.data_sources.scooper.table_object import ScooperRowData
-from utils import *
+from data_sources.scooper.table_object import ScooperRowData
+from DB_Manager_EP.db_table_objects import Post, Creatort, PostHistory
 from DB_Manager_EP.table_handler import TableHandler
-from utils import PostUtils
+from table_objects.utils import PostUtils, CreatorUtils
 
 
 class PostHandler(TableHandler):
 
     def __init__(self, event):
         super().__init__(event)
-        self.timestamp_partition_id = event["body"]
+        self.timestamp_partition_id = event["id"]
 
     def run(self, run_type=None):
 
@@ -52,7 +51,7 @@ class PostHandler(TableHandler):
     def query_raw_data(self):
         filters = [
             {
-                "column": utils.PostUtils.INGESTION_TIMESTAMP_FIELD,
+                "column": PostUtils.INGESTION_TIMESTAMP_FIELD,
                 "values": [self.timestamp_partition_id],
                 "op": "in"
             }
@@ -77,9 +76,9 @@ class PostHandler(TableHandler):
             # Create a dictionary where '_score' is removed from the column names, keeping the values intact
             return json.dumps({col.replace('source_', ''): row[col] for col in columns})
 
-        #  concatenate by '\' all the fields located in self.df_data and utils.PostUtils.location_fields
-        self.df_data['location'] = self.df_data[utils.PostUtils.location_fields].apply(
-            lambda x: create_json(x, utils.PostUtils.location_fields), axis=1)
+        #  concatenate by '\' all the fields located in self.df_data and PostUtils.location_fields
+        self.df_data['location'] = self.df_data[PostUtils.location_fields].apply(
+            lambda x: create_json(x, PostUtils.location_fields), axis=1)
 
     def transform(self):
         """
@@ -104,7 +103,7 @@ class PostHandler(TableHandler):
 
         # convert published_ts to date
         self.df_data['publish_date'] = pd.to_datetime(self.df_data['published_ts'], unit='ms').dt.date
-        self.df_data.rename(columns=utils.PostUtils.map_from_field_name_from_scooper, inplace=True)
+        self.df_data.rename(columns=PostUtils.map_from_field_name_from_scooper, inplace=True)
 
         filters = [
             {
@@ -199,14 +198,14 @@ class PostHandler(TableHandler):
 
         messages = []
         history_size = len(history_ids_to_update)
-        for i in range(0, history_size, POSTS_NUM):
+        for i in range(0, history_size, PostUtils.POSTS_NUM):
             from_i = i
-            to_i = i + POSTS_NUM
+            to_i = i + PostUtils.POSTS_NUM
             post_size = len(post_ids_to_update)
             if to_i > post_size >= from_i:
-                to_i = min(i + POSTS_NUM, post_size)
+                to_i = min(i + PostUtils.POSTS_NUM, post_size)
             elif to_i > post_size:
-                to_i = min(i + POSTS_NUM, history_size)
+                to_i = min(i + PostUtils.POSTS_NUM, history_size)
                 from_i = to_i
             post_id_slice = post_ids_to_update[from_i:to_i]
             post_history_id_slice = history_ids_to_update[from_i:to_i]
@@ -218,7 +217,7 @@ class PostHandler(TableHandler):
     def extract_platform_name(x):
         if x is not None:
             media_name = x.split("/")[2].split('.')[0]
-            if str.lower(media_name) not in utils.CreatorUtils.valid_platforms:
+            if str.lower(media_name) not in CreatorUtils.valid_platforms:
                 return None
             else:
                 return str.upper(media_name)

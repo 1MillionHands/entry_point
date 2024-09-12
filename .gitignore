@@ -6,5 +6,5 @@ test.py
 venv/
 /entry_venv/
 /shared/
-/DB_Manager_EP/data_sources/scooper/temp.json
-/DB_Manager_EP/data_sources/active_fence/temp.json
+/data_sources/scooper/temp.json
+/data_sources/active_fence/temp.json

@@ -1,12 +1,12 @@
 # Third-party libraries
 import pandas as pd
+import json
 
 # Local application/library specific imports
 from DB_Manager_EP.DB_alchemy import DbService
-from utils import *
+
 from DB_Manager_EP.connectors.s3_connector import S3Connector
 from DB_Manager_EP.connectors.sqs_connector import SQSConnector
-import os
 
 
 class TableHandler:

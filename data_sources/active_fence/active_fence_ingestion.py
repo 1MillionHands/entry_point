@@ -5,9 +5,8 @@ import uuid
 from io import BytesIO
 
 # Local application/library specific imports
-from DB_Manager_EP.data_sources.active_fence.table_object import ActiveFenceRowData
+from data_sources.active_fence.table_object import ActiveFenceRowData
 from DB_Manager_EP.table_handler import TableHandler
-from utils import *
 
 
 class ActiveFenceIngest(TableHandler):

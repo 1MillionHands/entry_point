@@ -1,8 +1,6 @@
 from utils import EventHandlerUtils
-from DB_Manager_EP.table_objects.post import PostHandler
-from DB_Manager_EP.table_objects.creator import CreatorHandler
-from DB_Manager_EP.data_sources.active_fence.active_fence_ingestion import ActiveFenceIngest
-from DB_Manager_EP.data_sources.scooper.scooper_ingestion import ScooperIngestion
+from data_sources.active_fence.active_fence_ingestion import ActiveFenceIngest
+from data_sources.scooper.scooper_ingestion import ScooperIngestion
 
 
 class EventHandler:
@@ -12,19 +10,10 @@ class EventHandler:
 
     @staticmethod
     def route_data_to_object(event):
-        if event[EventHandlerUtils.EVENT_NAME] == "get_posts":
-            PostHandler(event).run('run_from_scooper')
-            return None
-
-        elif event[EventHandlerUtils.EVENT_NAME] == "scooper":
+        if event[EventHandlerUtils.EVENT_NAME] == "scooper":
             obj = ScooperIngestion(event)
             obj.run()
             return obj.running_timestamp_id
-
-        elif event[EventHandlerUtils.EVENT_NAME] == "get_creators":
-            obj = CreatorHandler(event)
-            obj.run('run_from_scooper')
-            return obj.timestamp_partition_id
 
         elif event[EventHandlerUtils.EVENT_NAME] == "activefence":
             ActiveFenceIngest(event).run()

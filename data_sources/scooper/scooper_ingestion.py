@@ -4,7 +4,7 @@ import numpy as np
 import uuid
 
 import json
-from DB_Manager_EP.data_sources.scooper.table_object import ScooperRowData, Utils
+from data_sources.scooper.table_object import ScooperRowData, Utils
 from DB_Manager_EP.table_handler import TableHandler
 from datetime import datetime
 from pytz import timezone
