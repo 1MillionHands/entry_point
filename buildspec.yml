@@ -9,13 +9,13 @@ phases:
   build:
     commands:
       # First Package: Packaging everything except 'table_objects' and call it get_api_lambda_pack
-      - echo Packaging Lambda function 1 (get_api_lambda_pack)...
+      - echo "Packaging Lambda function 1 (get_api_lambda_pack)..."
       - mkdir get_api_lambda_pack
       # Zip everything except the 'table_objects' directory
       - zip -r9 get_api_lambda_pack.zip DB_Manager_EP -x "DB_Manager_EP/table_objects/*" requirements.txt lambda_function.py events_handler.py utils.py config_file.json
 
       # Second Package: Packaging everything
-      - echo Packaging Lambda function 2 (all files)...
+      - echo "Packaging Lambda function 2 (all files)..."
       - mkdir full_lambda_package
       # Zip the entire directory including all files and folders
       - zip -r9 full_lambda_package.zip DB_Manager_EP requirements.txt lambda_function.py events_handler.py utils.py config_file.json
