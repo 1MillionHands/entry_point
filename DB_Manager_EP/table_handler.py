@@ -39,8 +39,13 @@ class TableHandler:
     def update_db_insert(self, tbl_object=None, records=None):
         pass
 
-    def update_db_delete_insert(self):
-        pass
+    def update_db_delete_insert(self, tbl_object, records, keys, id_lst):
+        """
+        Updates the database by inserting new creators and posts, returning IDs for updates.
+        :return: tuple (list, list) of post ID values to update and post history ID values to update
+        """
+        self.db_obj.delete_table(tbl_object, keys, id_lst)
+        self.db_obj.insert_table(tbl_object, records)
 
     def extract_data(self):
         pass

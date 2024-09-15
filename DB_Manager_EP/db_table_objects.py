@@ -1,10 +1,21 @@
 from datetime import datetime
 from enum import Enum as PythonEnum, auto
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, TIMESTAMP, \
-    Boolean, Float, func
+    Boolean, Float, func, Enum
 from sqlalchemy.ext.declarative import declarative_base
 import uuid
 Base = declarative_base()
+
+
+
+class PlatformType(PythonEnum):
+    LINKEDIN = auto()
+    INSTAGRAM = auto()
+    YOUTUBE = auto()
+    TWITTER = auto()
+    FACEBOOK = auto()
+    TIKTOK = auto()
+    REDDIT = auto()
 
 
 class Post(Base):
@@ -34,15 +45,7 @@ class Post(Base):
     language = Column(String, default='')
     date_archive = Column(DateTime, default=datetime(2000, 1, 1))
     virality_score = Column(Float, default=0)
-
-
-class PlatformType(PythonEnum):
-    LINKEDIN = auto()
-    INSTAGRAM = auto()
-    YOUTUBE = auto()
-    TWITTER = auto()
-    FACEBOOK = auto()
-    TIKTOK = auto()
+    platform_name = Column(Enum(PlatformType))
 
 
 class PostHistory(Base):
@@ -77,7 +80,7 @@ class Creatort(Base):
     hashtag_list = Column(String, default='')
     engagement_history = Column(String, default='')
     last_post_date = Column(DateTime, default=datetime(2000, 1, 1))
-    platform_name = Column(String, default=str(uuid.uuid4()))
+    platform_name = Column(Enum(PlatformType))
 
 
 class CreatorHistoryt(Base):

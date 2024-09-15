@@ -33,10 +33,11 @@ class CreatorHandler(TableHandler):
         self.query_raw_data()
         creator, creator_history = self.transform()
 
-        if creator is not None and creator_history is not None:
+        if creator is not None:
             # update creators
             self.update_db_insert(Creatort, creator)
 
+        if creator_history is not None:
             # update creators history
             self.update_db_delete_insert(CreatorHistoryt, creator_history, CreatorUtils.INGESTION_TIMESTAMP_FIELD,
                                          [self.timestamp_partition_id])
@@ -156,14 +157,6 @@ class CreatorHandler(TableHandler):
         Updates the database by inserting new creators and posts, returning IDs for updates.
         :return: tuple (list, list) of post ID values to update and post history ID values to update
         """
-        self.db_obj.insert_table(tbl_object, records)
-
-    def update_db_delete_insert(self, tbl_object, records, keys, id_lst):
-        """
-        Updates the database by inserting new creators and posts, returning IDs for updates.
-        :return: tuple (list, list) of post ID values to update and post history ID values to update
-        """
-        self.db_obj.delete_table(tbl_object, keys, id_lst)
         self.db_obj.insert_table(tbl_object, records)
 
     def preprocess_posts_to_fit_db(self):

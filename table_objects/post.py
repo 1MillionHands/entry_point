@@ -42,7 +42,8 @@ class PostHandler(TableHandler):
             self.update_db_insert(Post, new_posts_)
 
         if posts_hst is not None:
-            self.update_db_insert(PostHistory, posts_hst)
+            self.update_db_delete_insert(PostHistory, posts_hst, PostUtils.INGESTION_TIMESTAMP_FIELD,
+                                         [self.timestamp_partition_id])
 
 
     def run_from_circle(self):
