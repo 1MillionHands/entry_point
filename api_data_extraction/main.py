@@ -28,19 +28,19 @@ class ExtractScooperData:
         self.s3_connector = s3_connector.S3Connector()
         self.event = event
 
-        if event.get('source_utl_dict', 'None') != 'None':
-            self.source_url_dict = event["source_url_dict"]
+        if event.get('source_url_list', 'None') != 'None':
+            self.source_url_list = event["source_url_list"]
             self.bucket_name = event['bucket_name']
             self.key_prefix = event['key_prefix']
             self.output_key = event['output_key']
         else:
-            self.source_url_dict = ApiUtil.source_url_dict
+            self.source_url_list = ApiUtil.source_url_list
             self.bucket_name = ApiUtil.bucket_name
             self.key_prefix = ApiUtil.key_prefix
             self.output_key = ApiUtil.output_key
 
         self.env = self.validate_env(event['test_env_status'])
-        self.source_url_dict = self.set_source_url_dict()
+        self.source_url_dict = self.set_source_utl_list()
 
     @staticmethod
     def validate_env(test_env_status):
@@ -49,20 +49,15 @@ class ExtractScooperData:
         else:
             raise Exception("test_env_status must be 'test' or 'prod'")
 
-    def set_source_url_dict(self):
-        url_list = self.event.get("source_url_dict", 'None')
+    def set_source_utl_list(self):
         dict_ = {}
-        if url_list == 'None':
-            raise Exception("source_url_list not found in event")
-        else:
-            url_list = url_list if isinstance(url_list, list) else [url_list]
 
-            for url in url_list:
-                url_res = ApiUtil.get(self.source_url_dict[url], 'None')
-                if url_res == 'None':
-                    raise Exception("given key wasn't ofund in the class util 'source_url_dict'")
-                else:
-                    dict_[url] = url_res
+        for url in self.source_url_list:
+            url_res = ApiUtil.source_url_dict.get(url, 'None')
+            if url_res == 'None':
+                raise Exception("given key wasn't ofund in the class util 'source_url_dict'")
+            else:
+                dict_[url] = url_res
             return dict_
 
 

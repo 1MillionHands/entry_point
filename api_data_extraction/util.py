@@ -14,3 +14,5 @@ class ApiUtil:
     bucket_name = "data-omhds"
     key_prefix = "data/"
     output_key = "scooper_imports"
+
+    source_url_list = ["twitter_1","instagram_1","reddit_1","youtube_1","tiktok_1"]
