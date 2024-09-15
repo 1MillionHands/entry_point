@@ -1,7 +1,7 @@
 
 
 class ApiUtil:
-    source_utl_dict = {
+    source_url_dict = {
         "twitter_1": "https://access.scooper.co.il/app/project/079b31af-d87b-4dbe-9689-9cb5752b10aa/cached/export_Scooper8_xoAfoLRB.json",
         "instagram_1": "https://access.scooper.co.il/app/project/079b31af-d87b-4dbe-9689-9cb5752b10aa/cached/export_Scooper8_b4NgvSLV.json",
         "reddit_1": "https://access.scooper.co.il/app/project/8408c995-d612-41ed-84ee-69d3c0fa117e/cached/export_Scooper5_qp06Q9tP.json",

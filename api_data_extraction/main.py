@@ -29,12 +29,12 @@ class ExtractScooperData:
         self.event = event
 
         if event.get('source_utl_dict', 'None') != 'None':
-            self.source_utl_dict = event["source_url_dict"]
+            self.source_url_dict = event["source_url_dict"]
             self.bucket_name = event['bucket_name']
             self.key_prefix = event['key_prefix']
             self.output_key = event['output_key']
         else:
-            self.source_utl_dict = ApiUtil.source_utl_dict
+            self.source_url_dict = ApiUtil.source_url_dict
             self.bucket_name = ApiUtil.bucket_name
             self.key_prefix = ApiUtil.key_prefix
             self.output_key = ApiUtil.output_key
@@ -50,7 +50,7 @@ class ExtractScooperData:
             raise Exception("test_env_status must be 'test' or 'prod'")
 
     def set_source_url_dict(self):
-        url_list = self.event.get("source_url_list", 'None')
+        url_list = self.event.get("source_url_dict", 'None')
         dict_ = {}
         if url_list == 'None':
             raise Exception("source_url_list not found in event")
@@ -58,9 +58,9 @@ class ExtractScooperData:
             url_list = url_list if isinstance(url_list, list) else [url_list]
 
             for url in url_list:
-                url_res = ApiUtil.get(self.source_utl_dict[url], 'None')
+                url_res = ApiUtil.get(self.source_url_dict[url], 'None')
                 if url_res == 'None':
-                    raise Exception("given key wasn't ofund in the class util 'source_utl_dict'")
+                    raise Exception("given key wasn't ofund in the class util 'source_url_dict'")
                 else:
                     dict_[url] = url_res
             return dict_
