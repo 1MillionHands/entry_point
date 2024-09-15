@@ -82,7 +82,7 @@ class ExtractScooperData:
             bucket_name = self.bucket_name
 
             # Upload the data to S3
-            s3.put_object(Body=json.dumps(data), Bucket=bucket_name, Key=f"{key_prefix}{file_name}")
+            s3.put_object(Body=json.dumps(data), Bucket=bucket_name, Key=f"{key_prefix}/{file_name}")
 
             print(f"Uploaded {file_name} to S3")
 

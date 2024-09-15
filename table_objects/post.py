@@ -97,6 +97,7 @@ class PostHandler(TableHandler):
 
         # drop rows with nan values from url parent
         self.df_data.dropna(subset=['parent_url'], inplace=True)
+
         # Adjust creator_id
         self.validate_creator_id()
 
@@ -144,6 +145,7 @@ class PostHandler(TableHandler):
         #     raise "One of the post data contain to high value"
 
         self.df_data['ingestion_timestamp'] = self.timestamp_partition_id
+        self.transform_engagement_metrics()
         posts_hst = self.df_data[PostUtils.POST_HISTORY_VARIABLES].to_dict(orient='records')
         return new_posts_, posts_hst
 
@@ -178,6 +180,12 @@ class PostHandler(TableHandler):
         self.df_data.dropna(subset=['creator_id'], inplace=True)
 
         self.df_data = self.df_data[PostUtils.column_fields_from_scooper]
+
+    def transform_engagement_metrics(self):
+
+        self.df_data[PostUtils.VIEW_COUNT] = self.df_data['youtube_views'] +self.df_data['facebook_reactions_total']
+        self.df_data[PostUtils.LIKE_COUNT] = self.df_data['facebook_likes'] +self.df_data['youtube_likes'] +self.df_data['twitter_shares']
+
 
     @staticmethod
     def get_message(history_ids, posts_ids):

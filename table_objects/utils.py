@@ -9,7 +9,8 @@ class PostUtils:
     INGESTION_TIMESTAMP_FIELD = 'ingestion_timestamp'
 
      # the name are after preprocess
-    POST_HISTORY_VARIABLES = [ 'ingestion_timestamp', 'engagement_score_view',  'post_id', 'post_history_id']
+    POST_HISTORY_VARIABLES = [ 'ingestion_timestamp', 'engagement_score_view',  'post_id', 'post_history_id',
+                               'num_of_likes', 'num_of_views', 'num_of_comments']
     POST_VARIABLES = ['url', 'publish_date', 'location', 'content', 'type', 'media_url', 'image_url', 'sentiment_score',
                       'post_id', 'creator_id']
 
@@ -17,7 +18,8 @@ class PostUtils:
                                   'parent_url', 'published_ts', 'source_country', 'source_country_code',  'source_region',
                                   'source_city', 'source_latitude', 'source_longitude', 'content', 'post_type', 'media_url',
                                   'image_url', 'sentiment_score', 'creator_id', 'engagement_score_view',
-                                  'ingestion_timestamp'
+                                  'ingestion_timestamp', 'num_comments', 'facebook_likes', 'youtube_views',
+                                  'twitter_shares', 'facebook_shares', 'youtube_likes','facebook_reactions_total'
                                   ]
 
     map_from_field_name_from_scooper = {
@@ -30,8 +32,12 @@ class PostUtils:
         'image_url': 'image_url',
         'sentiment_score': 'sentiment_score',
         'engagement_score_view': 'engagement_score_view',
-        'creator_id': 'creator_id'
+        'creator_id': 'creator_id',
+        'num_comments': 'num_of_comments'
     }
+
+    VIEW_COUNT = 'num_of_views'
+    LIKE_COUNT = 'num_of_likes'
 
     SUCCESS_RESPONSE = 200
 

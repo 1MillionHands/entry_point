@@ -135,10 +135,8 @@ class CreatorHandler(TableHandler):
                                                                                map_id_doesnt_exist.values,
                                                                                map_is_new_creator.values):
 
-            if id_doesnt_exist and is_new_creator:
+            if is_new_creator or id_doesnt_exist:
                 id_lst.append(str(uuid.uuid4()))
-            elif id_doesnt_exist and not is_new_creator:
-                id_lst.append(current_id)
             else:
                 id_lst.append(new_current_id)
         return id_lst
