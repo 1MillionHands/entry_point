@@ -29,7 +29,7 @@ class ExtractScooperData:
         self.event = event
 
         if event.get('source_utl_dict', 'None') != 'None':
-            self.source_utl_dict = event["source_utl_dict"]
+            self.source_utl_dict = event["source_url_dict"]
             self.bucket_name = event['bucket_name']
             self.key_prefix = event['key_prefix']
             self.output_key = event['output_key']
