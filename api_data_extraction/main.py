@@ -39,6 +39,7 @@ class ExtractScooperData:
             self.key_prefix = ApiUtil.key_prefix
             self.output_key = ApiUtil.output_key
 
+        self.env = 'test' if event['test_env_status'] else 'prod'
         self.source_url_dict = self.set_source_url_dict()
 
 
@@ -77,7 +78,7 @@ class ExtractScooperData:
             # Create a file name based on the URL name
             file_name = f"{current_date}_scooper.json"
 
-            key_prefix = f"{self.output_key}/{current_date.year}/{current_date.month}/{current_date.day}/{name}"
+            key_prefix = f"{self.env}/{self.output_key}/{current_date.year}/{current_date.month}/{current_date.day}/{name}"
             bucket_name = self.bucket_name
 
             # Upload the data to S3

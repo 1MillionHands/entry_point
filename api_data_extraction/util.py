@@ -13,4 +13,4 @@ class ApiUtil:
 
     bucket_name = "data-omhds"
     key_prefix = "data/"
-    output_key = "test/scooper_imports"
+    output_key = "scooper_imports"
