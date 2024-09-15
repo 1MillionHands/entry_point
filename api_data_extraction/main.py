@@ -39,11 +39,15 @@ class ExtractScooperData:
             self.key_prefix = ApiUtil.key_prefix
             self.output_key = ApiUtil.output_key
 
-        self.env = 'test' if event['test_env_status'] else 'prod'
+        self.env = self.validate_env(event['test_env_status'])
         self.source_url_dict = self.set_source_url_dict()
 
-
-        self.is_test = event["test_env_status"]
+    @staticmethod
+    def validate_env(test_env_status):
+        if test_env_status in ["test","prod"]:
+            return test_env_status
+        else:
+            raise Exception("test_env_status must be 'test' or 'prod'")
 
     def set_source_url_dict(self):
         url_list = self.event.get("source_url_list", 'None')
