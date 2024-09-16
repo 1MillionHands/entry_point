@@ -36,7 +36,7 @@ class ScooperRowData(Base):
     title_snippet = Column(Text)
     parent_url = Column(String)
     scooper_tags = Column(String)
-    sentiment_score = Column(Numeric)
+    sentiment = Column(Numeric)
     creator_gender = Column(String)
     facebook_shares = Column(Numeric)
     semrush_pageviews = Column(Numeric)
@@ -52,7 +52,7 @@ class ScooperRowData(Base):
     num_comments = Column(Numeric)
     indexed_ts = Column(TIMESTAMP)
     language = Column(String)
-    creator_name = Column(String)
+    name = Column(String)
     facebook_reactions_total = Column(Numeric)
     source_continent = Column(String)
     semrush_unique_visitors = Column(Numeric)
@@ -75,7 +75,6 @@ class ScooperRowData(Base):
     article_longitude = Column(String)
     article_country_code = Column(String)
     provider = Column(String)
-    # todo - add the platform name or edit the source_type
     
 class Utils:
 
@@ -101,7 +100,7 @@ class Utils:
         'extra_source_attributes.world_data.longitude': 'source_longitude',
         'title_snippet': 'title_snippet',
         'tags_internal': 'scooper_tags',
-        'sentiment': 'sentiment_score',
+        'sentiment': 'sentiment',
         'extra_author_attributes.gender': 'creator_gender',
         'article_extended_attributes.facebook_shares': 'facebook_shares',
         'source_extended_attributes.semrush_pageviews': 'semrush_pageviews',
@@ -117,7 +116,7 @@ class Utils:
         'article_extended_attributes.num_comments': 'num_comments',
         'indexed_ts': 'indexed_ts',
         'lang': 'language',
-        'extra_author_attributes.name': 'creator_name',
+        'extra_author_attributes.name': 'name',
         'article_extended_attributes.facebook_reactions_total': 'facebook_reactions_total',
         'extra_source_attributes.world_data.continent': 'source_continent',
         'source_extended_attributes.semrush_unique_visitors': 'semrush_unique_visitors',
@@ -148,7 +147,7 @@ class Utils:
                         'facebook_likes',
                         'twitter_shares',
                         'not_safe_for_work_level',
-                        'sentiment_score',
+                        'sentiment',
                         'facebook_shares',
                         'semrush_pageviews',
                         'cluster_id',

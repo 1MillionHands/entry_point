@@ -51,9 +51,9 @@ class S3Connector:
             return False
 
     def _put_object(self, object_data, bucket, key):
-
+        s3_client = self.s3.meta.client
         try:
-            response = self.s3.put_object(Bucket=bucket, Body=object_data, Key=key)
+            response = s3_client.put_object(Bucket=bucket, Body=object_data, Key=key)
             return response
         except Exception as e:
             print(e)

@@ -45,8 +45,19 @@ class ScooperIngestion(TableHandler):
         obj = self.s3object._read_file_from_s3(self.bucket, self.key)
         if obj:
             data = obj.get()['Body'].read().decode('utf-8')
-            self.json_data = json.loads(data)
+            decoder = json.JSONDecoder()
 
+            pos = 0
+            while pos < len(data):
+                try:
+                    obj, pos = decoder.raw_decode(data, pos)
+                    # Do something with obj
+                    print(obj)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON: {str(e)}")
+                    break
+
+            self.json_data = obj
         else:
             raise Exception("Error reading data from s3 - could be file is empty")
 

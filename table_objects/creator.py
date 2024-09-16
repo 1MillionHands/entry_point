@@ -59,23 +59,24 @@ class CreatorHandler(TableHandler):
 
     def transform(self):
 
-        self.df_data['platform_name'] = self.df_data.media_url.apply(lambda x: self.extract_platform_name(x))
+        self.df_data.dropna(subset=['media_url'], inplace=True)
+        self.df_data['platform_type'] = self.df_data.media_url.apply(lambda x: self.extract_platform_name(x))
         self.df_data.drop(columns='media_url', inplace=True)
         self.df_data.drop_duplicates(subset=CreatorUtils.primary_key, inplace=True)
 
         # Drop nulls rows
         self.df_data = self.df_data.dropna(how='all')
-        self.df_data = self.df_data.dropna(subset=['creator_name', 'platform_name'])
+        self.df_data = self.df_data.dropna(subset=CreatorUtils.primary_key)
 
         # Use get all the ids, name and platform name from new df, and query creator table using filter query table, filter name and platform name
         filters = [
             {
-                "column": "creator_name",
-                "values": list(self.df_data.creator_name)
+                "column": "name",
+                "values": list(self.df_data.name)
             },
             {
-                "column": "platform_name",
-                "values": list(self.df_data.platform_name)
+                "column": "platform_type",
+                "values": list(self.df_data.platform_type)
             }
         ]
 
@@ -83,63 +84,68 @@ class CreatorHandler(TableHandler):
         # existing_creators = self.db_obj.query_table_orm(table_name=ScoperTemp, filters=filters, distinct=True, to_df=True)[0]
         existing_creators = \
         self.db_obj.query_table_orm(table_name=Creatort, filters=filters, distinct=True, to_df=True)[0]
+        creators = self.set_creator_dims(existing_creators)
 
-        if existing_creators is not None:
-            self.df_data = self.df_data.merge(existing_creators, how='left', on=['creator_name', 'platform_name'])
+        creators_history = self.set_create_history_id(creators[['creator_id', 'name', 'platform_type', 'indicator']])
 
-            # Check if new creators has id
-            map_id_doesnt_exist = self.df_data[['creator_id_x']].isnull()
-            map_is_new_creator = self.df_data[['creator_id_y']].isnull()
+        creators = creators[creators.indicator]
+        creators.drop(columns=['indicator'], inplace=True)
+        creators = creators.to_dict(orient='records')
+        return creators, creators_history
 
-            self.df_data['creator_id_x'] = self.set_creator_id(map_id_doesnt_exist, map_is_new_creator)
+    def set_creator_dims(self, existing_creators):
+        if existing_creators is None:
+            new_creators = self.df_data.copy()
+            new_creators['creator_id'] = [str(uuid.uuid4()) for i in range(new_creators.shape[0])]
+            new_creators['indicator'] = True
+            new_creators = new_creators.copy()
+        else:
 
-            self.df_data.rename(columns={'creator_id_x': 'creator_id', 'sentiment_score_x': 'sentiment_score',
+            new_creators = self.df_data.merge(existing_creators, how='left', on=CreatorUtils.primary_key)
+
+            if new_creators['creator_id_y'].isnull().sum() == 0:
+                new_creators['creator_id_x'] = new_creators['creator_id_y']
+                new_creators['indicator'] = False
+
+            else:
+                new_creators_mask = new_creators['creator_id_y'].isnull()
+                new_creators['indicator'] = new_creators_mask
+                new_creators['creator_id_x'] = new_creators.apply(lambda x: str(uuid.uuid4()) if x['indicator'] else x['creator_id_y'], axis=1)
+
+            new_creators.rename(columns={'creator_id_x': 'creator_id', 'sentiment_x': 'sentiment',
                                          'creator_image_x': 'creator_image', 'creator_url_x': 'creator_url',
                                          'language_x': 'language'}, inplace=True)
 
-            self.df_data.drop(columns=['sentiment_score_y', 'creator_image_y', 'creator_url_y', 'language_y'],
+            new_creators.drop(columns=['sentiment_y', 'creator_image_y', 'creator_url_y', 'language_y'],
                               inplace=True)
+
+        creator_current_cols = self.columns_exist_in_external_data(CreatorUtils.CREATOR_FIELDS,
+                                                                   new_creators.columns)
+        creator_current_cols.append('indicator')
+        new_creators = new_creators[creator_current_cols]
+
+        # Correct null values by type
+        new_creators = new_creators.replace(np.nan, None)
+        new_creators = new_creators.replace({pd.NaT: None})
+        return new_creators
+
+    def set_create_history_id(self, creators):
+
+        # Create mase to self.df_data that with the creator platform type and name.
+        mask = self.df_data['name'].isin(creators['name']) & self.df_data['platform_type'].isin(creators['platform_type'])
+
+        # Set creator id from creators to the masked values of self.df_data
+        self.df_data.loc[mask, 'creator_id'] = creators['creator_id']
 
         self.df_data[CreatorUtils.CREATOR_HISTORY_ID] = [str(uuid.uuid4()) for i in range(self.df_data.shape[0])]
 
-        creator_current_cols = self.columns_exist_in_external_data(CreatorUtils.CREATOR_FIELDS,
-                                                                   self.df_data.columns)
-        if existing_creators is not None:
-            creators = self.df_data[self.df_data[CreatorUtils.CREATOR_ID_YEAR].isnull()][creator_current_cols]
-        else:
-            creators = self.df_data[creator_current_cols]
-
-        # Correct null values by type
-        creators = creators.replace(np.nan, None)
-        creators = creators.replace({pd.NaT: None})
-        creators = creators.to_dict(orient='records')
+        df_temp = self.df_data.rename(columns={'creator_id': 'creator_fk'}, inplace=False)
 
         creator_history_current_cols = self.columns_exist_in_external_data(CreatorUtils.CREATOR_HISTORY_VARIABLES,
-                                                                           self.df_data.columns)
-        creators_history = self.df_data[creator_history_current_cols].to_dict(orient='records')
-        return creators, creators_history
+                                                                           df_temp.columns)
+        creators_history = df_temp[creator_history_current_cols].to_dict(orient='records')
 
-
-    @staticmethod
-    def set_null_value(value):
-        import math
-        if isinstance(value, (int, float)):
-            return math.nan
-        else:
-            return None
-
-    def set_creator_id(self, map_id_doesnt_exist, map_is_new_creator):
-        id_lst = []
-        for new_current_id, current_id, id_doesnt_exist, is_new_creator in zip(self.df_data['creator_id_x'].values,
-                                                                               self.df_data['creator_id_y'].values,
-                                                                               map_id_doesnt_exist.values,
-                                                                               map_is_new_creator.values):
-
-            if is_new_creator or id_doesnt_exist:
-                id_lst.append(str(uuid.uuid4()))
-            else:
-                id_lst.append(new_current_id)
-        return id_lst
+        return creators_history
 
     @staticmethod
     def extract_platform_name(x):

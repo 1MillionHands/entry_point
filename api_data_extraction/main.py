@@ -22,6 +22,7 @@ config_path = os.path.normpath(config_path)
 with open(config_path, 'r') as f:
     config_data = json.load(f)
 
+
 class ExtractScooperData:
 
     def __init__(self, event):
@@ -44,7 +45,7 @@ class ExtractScooperData:
 
     @staticmethod
     def validate_env(test_env_status):
-        if test_env_status in ["test","prod"]:
+        if test_env_status in ["test", "prod"]:
             return test_env_status
         else:
             raise Exception("test_env_status must be 'test' or 'prod'")
@@ -55,11 +56,10 @@ class ExtractScooperData:
         for url in self.source_url_list:
             url_res = ApiUtil.source_url_dict.get(url, 'None')
             if url_res == 'None':
-                raise Exception("given key wasn't ofund in the class util 'source_url_dict'")
+                raise Exception("given key wasn't found in the class util 'source_url_dict'")
             else:
                 dict_[url] = url_res
             return dict_
-
 
     def run(self):
         # Create an S3 client
@@ -71,7 +71,7 @@ class ExtractScooperData:
             response = requests.get(url)
             data = response.json()
 
-            # exctract current data, and stirng it as part of the output key - is_test\year\month\day\name
+            # extract current data, and string it as part of the output key - is_test\year\month\day\name
             current_date = datetime.datetime.now()
 
             # Create a file name based on the URL name

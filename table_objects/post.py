@@ -8,7 +8,7 @@ import json
 from data_sources.scooper.table_object import ScooperRowData
 from DB_Manager_EP.db_table_objects import Post, Creatort, PostHistory
 from DB_Manager_EP.table_handler import TableHandler
-from table_objects.utils import PostUtils, CreatorUtils
+from table_objects.utils import PostUtils, CreatorUtils, ImageDownloader
 
 
 class PostHandler(TableHandler):
@@ -36,15 +36,20 @@ class PostHandler(TableHandler):
             print("No data found, stopping the process.")
             return
 
-        new_posts_, posts_hst = self.transform()
+        new_posts_, posts_hst, url_list = self.transform()
 
         if len(new_posts_) > 0:
             self.update_db_insert(Post, new_posts_)
 
         if posts_hst is not None:
-            self.update_db_delete_insert(PostHistory, posts_hst, PostUtils.INGESTION_TIMESTAMP_FIELD,
+            self.update_db_delete_insert(PostHistory, posts_hst, PostUtils.POST_HISTORY_TS,
                                          [self.timestamp_partition_id])
+        if url_list:
+            self.download_images(url_list)
 
+    def download_images(self, url_list):
+        downloader = ImageDownloader()
+        downloader.run(posts_url_list=url_list, s3_obj=self.s3object,bucket_name='omh-media', s3_path_prefix='posts_media')
 
     def run_from_circle(self):
         pass
@@ -86,13 +91,7 @@ class PostHandler(TableHandler):
         Performs bulk insertion of new posts and updates existing ones in the database.
         :return: tuple (list, list) of updated post ID values and post history ID values
         """
-        def find_out_of_range_values(df, min_value=-2147483648, max_value=2147483647):
-            out_of_range_rows = []
-            for idx, row in df.iterrows():
-                if any(isinstance(value, int) and (value < min_value or value > max_value) for value in row):
-                    print(f"Row {idx} has out-of-range value.")
-                    out_of_range_rows.append(idx)
-            return out_of_range_rows
+
         new_posts_ = pd.DataFrame()
 
         # drop rows with nan values from url parent
@@ -130,7 +129,6 @@ class PostHandler(TableHandler):
             # concatenate existing post from db to the df_data
             self.df_data = pd.concat([self.df_data, existing_posts], ignore_index=True)
 
-
         else:
             self.df_data[PostUtils.POST_ID] = [str(uuid.uuid4()) for x in range(self.df_data.shape[0])]
             new_posts = self.df_data.copy()
@@ -139,41 +137,54 @@ class PostHandler(TableHandler):
             current_cols = self.columns_exist_in_external_data(PostUtils.POST_VARIABLES, self.df_data.columns)
             new_posts_ = new_posts[current_cols].to_dict(orient='records')
 
+        new_post_images_url = list(set(new_posts['image_url'].values.tolist()))
+
         self.df_data[PostUtils.POST_HISTORY_ID] = str(uuid.uuid4())
 
-        # if len(find_out_of_range_values(self.df_data[current_cols])) >= 1:
-        #     raise "One of the post data contain to high value"
+        posts_hst = self.set_post_history()
+        return new_posts_, posts_hst, new_post_images_url
 
-        self.df_data['ingestion_timestamp'] = self.timestamp_partition_id
+    def set_post_history(self):
+
+        self.df_data[PostUtils.POST_HISTORY_TS] = self.timestamp_partition_id
         self.transform_engagement_metrics()
-        posts_hst = self.df_data[PostUtils.POST_HISTORY_VARIABLES].to_dict(orient='records')
-        return new_posts_, posts_hst
+        posts_hst = self.df_data[PostUtils.POST_HISTORY_VARIABLES]
+        posts_hst[PostUtils.NUMERICAL_INT_FIELD].fillna(0, inplace=True)
+        posts_hst[PostUtils.NUMERICAL_INT_FIELD] = posts_hst[PostUtils.NUMERICAL_INT_FIELD].astype(int)
+
+        posts_hst = posts_hst.to_dict(orient='records')
+
+        return posts_hst
 
     def validate_creator_id(self):
 
-        self.df_data['platform_name'] = self.df_data.media_url.apply(lambda x: self.extract_platform_name(x))
+        self.df_data[PostUtils.PLATFORM] = self.df_data.media_url.apply(lambda x: self.extract_platform_name(x))
         filters = [
             {
-                "column": "creator_name",
-                "values": list(self.df_data.creator_name)
+                "column": PostUtils.CREATOR_NAME,
+                "values": list(self.df_data[PostUtils.CREATOR_NAME])
             },
             {
-                "column": "platform_name",
-                "values": list(self.df_data.platform_name)
+                "column": PostUtils.PLATFORM,
+                "values": list(self.df_data[PostUtils.PLATFORM])
             }
         ]
 
-        existing_creators = self.db_obj.query_table_orm(table_name=Creatort, filters=filters, distinct=True, to_df=True)[0][['creator_id', 'creator_name', 'platform_name']]
+        existing_creators = \
+        self.db_obj.query_table_orm(table_name=Creatort, filters=filters, distinct=True, to_df=True)[0][
+            ['creator_id', PostUtils.CREATOR_NAME, PostUtils.PLATFORM]]
 
-        temp = self.df_data[['parent_url','creator_id', 'creator_name', 'platform_name']]
-        merged_data = pd.merge(temp, existing_creators, on=['creator_name', 'platform_name'], suffixes=('_new', '_gt'), how='left')
+        temp = self.df_data[['parent_url', 'creator_id', PostUtils.CREATOR_NAME, PostUtils.PLATFORM]]
+        merged_data = pd.merge(temp, existing_creators, on=CreatorUtils.primary_key, suffixes=('_new', '_gt'),
+                               how='left')
 
         # Step 2: Update the 'id' in new_data with the 'id' from gt where there is a match
         # 'id_new' is from new_data and 'id_gt' is from gt
         merged_data['creator_id_new'] = merged_data['creator_id_gt']
 
         # Step 3: Drop the extra columns and keep the updated 'id_new' as 'id'
-        updated_new_data = merged_data[['creator_name', 'platform_name', 'creator_id_new']].rename(columns={'creator_id_new': 'creator_id'})
+        updated_new_data = merged_data[[PostUtils.CREATOR_NAME, PostUtils.PLATFORM, 'creator_id_new']].rename(
+            columns={'creator_id_new': 'creator_id'})
 
         self.df_data['creator_id'] = updated_new_data['creator_id']
 
@@ -183,9 +194,9 @@ class PostHandler(TableHandler):
 
     def transform_engagement_metrics(self):
 
-        self.df_data[PostUtils.VIEW_COUNT] = self.df_data['youtube_views'] +self.df_data['facebook_reactions_total']
-        self.df_data[PostUtils.LIKE_COUNT] = self.df_data['facebook_likes'] +self.df_data['youtube_likes'] +self.df_data['twitter_shares']
-
+        self.df_data[PostUtils.VIEW_COUNT] = self.df_data['youtube_views'] + self.df_data['facebook_reactions_total']
+        self.df_data[PostUtils.LIKE_COUNT] = self.df_data['facebook_likes'] + self.df_data['youtube_likes'] + \
+                                             self.df_data['twitter_shares']
 
     @staticmethod
     def get_message(history_ids, posts_ids):
