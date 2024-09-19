@@ -139,7 +139,7 @@ class PostHandler(TableHandler):
 
         new_post_images_url = list(set(new_posts['image_url'].values.tolist()))
 
-        self.df_data[PostUtils.POST_HISTORY_ID] = str(uuid.uuid4())
+        self.df_data[PostUtils.POST_HISTORY_ID] = [str(uuid.uuid4()) for x in range(self.df_data.shape[0])]
 
         posts_hst = self.set_post_history()
         return new_posts_, posts_hst, new_post_images_url
