@@ -148,6 +148,7 @@ class PostHandler(TableHandler):
 
         self.df_data[PostUtils.POST_HISTORY_TS] = self.timestamp_partition_id
         self.transform_engagement_metrics()
+
         posts_hst =  self.df_data.copy().rename(columns = {'post_id': 'post_fk'}, inplace=False)
         posts_hst = posts_hst[PostUtils.POST_HISTORY_VARIABLES]
         posts_hst[PostUtils.NUMERICAL_INT_FIELD] = posts_hst[PostUtils.NUMERICAL_INT_FIELD].fillna(0.0)
