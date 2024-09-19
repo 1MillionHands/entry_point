@@ -54,10 +54,10 @@ class ImageDownloader:
                     # Upload the image to S3
                     s3_obj._put_object(object_data=image_data, bucket=bucket_name, key=key)
                 else:
-                    print(f"No image data found for post: {image_name}")
+                    print(f"No image data found for post: {image_url}")
 
             else:
-                print(f"No image URL found for post: {image_name}")
+                print(f"No image URL found for post: {image_url}")
 
 
 if __name__ == "__main__":
