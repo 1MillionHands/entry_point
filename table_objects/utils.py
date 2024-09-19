@@ -97,7 +97,7 @@ class PostUtils:
         'source_city', 'source_latitude', 'source_longitude', 'content', 'post_type', 'media_url',
         'image_url', 'sentiment', 'creator_id', 'engagement_score_view',
         'ingestion_timestamp', 'num_comments', 'facebook_likes', 'youtube_views',
-        'twitter_shares', 'facebook_shares', 'youtube_likes', 'facebook_reactions_total'
+        'twitter_shares', 'facebook_shares', 'youtube_likes', 'facebook_reactions_total', 'platform_type'
     ]
 
     map_from_field_name_from_scooper = {
