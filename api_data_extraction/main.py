@@ -73,9 +73,10 @@ class ExtractScooperData:
 
             # extract current data, and string it as part of the output key - is_test\year\month\day\name
             current_date = datetime.datetime.now()
+            formatted_datetime = current_date.strftime('%Y-%m-%d-%H-%M-%S')
 
             # Create a file name based on the URL name
-            file_name = f"{current_date}_scooper.json"
+            file_name = f"{formatted_datetime}_scooper.json"
 
             key_prefix = f"{self.env}/{self.output_key}/{current_date.year}/{current_date.month}/{current_date.day}/{name}"
             bucket_name = self.bucket_name

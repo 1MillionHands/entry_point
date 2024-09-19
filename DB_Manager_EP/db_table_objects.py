@@ -4,8 +4,8 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, TIMESTAMP,
     Boolean, Float, func, Enum
 from sqlalchemy.ext.declarative import declarative_base
 import uuid
-Base = declarative_base()
 
+Base = declarative_base()
 
 
 class PlatformType(PythonEnum):
@@ -22,7 +22,7 @@ class Post(Base):
     __tablename__ = 'Post'
 
     post_id = Column(String, primary_key=True, default=str(uuid.uuid4()))
-    creator_fk = Column(String, ForeignKey('Creator.creator_id')) #todo: remove when program run in production
+    creator_fk = Column(String, ForeignKey('Creator.creator_id'))  # todo: remove when program run in production
     # creator_id = Column(String, ForeignKey('Creator.creator_id'))
     publish_date = Column(DateTime, default=datetime(2000, 1, 1))
     removed_date = Column(DateTime, default=datetime(2000, 1, 1))
@@ -45,7 +45,7 @@ class Post(Base):
     language = Column(String, default='')
     date_archive = Column(DateTime, default=datetime(2000, 1, 1))
     virality_score = Column(Float, default=0)
-    platform_type = Column(String)
+    platform_type = Column(Enum(PlatformType))
 
 
 class PostHistory(Base):
@@ -80,18 +80,19 @@ class Creatort(Base):
     hashtag_list = Column(String, default='')
     engagement_history = Column(String, default='')
     last_post_date = Column(DateTime, default=datetime(2000, 1, 1))
-    platform_type = Column(String)
+    platform_type = Column(Enum(PlatformType))
 
 
 class CreatorHistoryt(Base):
     __tablename__ = 'CreatorHistory'
 
     creator_history_id = Column('creatorHistory_id', String, primary_key=True, default=str(uuid.uuid4()))
-    creator_key = Column(String, ForeignKey('Creator.creator_id'))
+    creator_fk = Column(String, ForeignKey('Creator.creator_id'))
+    # creator_key = Column(String, ForeignKey('Creator.creator_id'))
     owner_post_count = Column(Integer, default=0)
     owner_follower_count = Column(Integer, default=0)
     creator_score = Column(Integer, default=0)
-    created_at = Column(TIMESTAMP, server_default=func.now())
+    created_at = Column(TIMESTAMP)
 
 
 class Volunteer(Base):

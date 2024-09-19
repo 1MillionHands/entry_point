@@ -148,8 +148,9 @@ class PostHandler(TableHandler):
 
         self.df_data[PostUtils.POST_HISTORY_TS] = self.timestamp_partition_id
         self.transform_engagement_metrics()
-        posts_hst = self.df_data[PostUtils.POST_HISTORY_VARIABLES]
-        posts_hst[PostUtils.NUMERICAL_INT_FIELD].fillna(0, inplace=True)
+        posts_hst =  self.df_data.copy().rename(columns = {'post_id': 'post_fk'}, inplace=False)
+        posts_hst = posts_hst[PostUtils.POST_HISTORY_VARIABLES]
+        posts_hst[PostUtils.NUMERICAL_INT_FIELD] = posts_hst[PostUtils.NUMERICAL_INT_FIELD].fillna(0.0)
         posts_hst[PostUtils.NUMERICAL_INT_FIELD] = posts_hst[PostUtils.NUMERICAL_INT_FIELD].astype(int)
 
         posts_hst = posts_hst.to_dict(orient='records')
@@ -173,6 +174,8 @@ class PostHandler(TableHandler):
         existing_creators = \
         self.db_obj.query_table_orm(table_name=Creatort, filters=filters, distinct=True, to_df=True)[0][
             ['creator_id', PostUtils.CREATOR_NAME, PostUtils.PLATFORM]]
+
+        existing_creators[PostUtils.PLATFORM] = existing_creators[PostUtils.PLATFORM].apply(lambda x: x.name)
 
         temp = self.df_data[['parent_url', 'creator_id', PostUtils.CREATOR_NAME, PostUtils.PLATFORM]]
         merged_data = pd.merge(temp, existing_creators, on=CreatorUtils.primary_key, suffixes=('_new', '_gt'),
