@@ -39,6 +39,7 @@ class ImageDownloader:
         """
         Runs the process to download images and upload to S3.
         """
+        total_failed_downloads = 0
         for image_url in posts_url_list: # Assuming your post object/dict has an 'image_url' field
             if image_url:
                 # Download the image
@@ -55,9 +56,12 @@ class ImageDownloader:
                     s3_obj._put_object(object_data=image_data, bucket=bucket_name, key=key)
                 else:
                     print(f"No image data found for post: {image_url}")
+                    total_failed_downloads += 1
 
             else:
                 print(f"No image URL found for post: {image_url}")
+
+        print(f"Total failed downloads: {total_failed_downloads} out of {len(posts_url_list)}")
 
 
 if __name__ == "__main__":
