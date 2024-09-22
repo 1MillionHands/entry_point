@@ -50,6 +50,8 @@ class ImageDownloader:
 
             else:
                 print(f"No image URL found for post: {image_url}")
+                total_failed_downloads += 1
+
 
         print(f"Total failed downloads: {total_failed_downloads} out of {len(posts_url_list)}")
 

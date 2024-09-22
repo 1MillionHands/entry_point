@@ -67,6 +67,7 @@ class ExtractScooperData:
 
         # Iterate over the URLs and upload the data to S3
         for name, url in self.source_url_dict.items():
+            print(f"Uploading {name} data to S3...")
             # Fetch the JSON data from the URL
             response = requests.get(url)
             data = response.json()
@@ -84,7 +85,7 @@ class ExtractScooperData:
             # Upload the data to S3
             s3.put_object(Body=json.dumps(data), Bucket=bucket_name, Key=f"{key_prefix}/{file_name}")
 
-            print(f"Uploaded {file_name} to S3")
+            print(f"Uploaded {name}/{file_name} to S3")
 
 # if __name__ == "__main__":
 #     event = {
