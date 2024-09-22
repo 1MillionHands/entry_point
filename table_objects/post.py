@@ -137,7 +137,7 @@ class PostHandler(TableHandler):
             current_cols = self.columns_exist_in_external_data(PostUtils.POST_VARIABLES, self.df_data.columns)
             new_posts_ = new_posts[current_cols].to_dict(orient='records')
 
-        new_post_images_url = list(set(new_posts['image_url'].values.tolist()))
+        new_post_images_url = list(set(new_posts[['post_id','image_url', 'platform_type']].values.tolist()))
 
         self.df_data[PostUtils.POST_HISTORY_ID] = [str(uuid.uuid4()) for x in range(self.df_data.shape[0])]
 

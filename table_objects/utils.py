@@ -25,29 +25,19 @@ class ImageDownloader:
             print(f"Error downloading image from {url}: {str(e)}")
             return None
 
-    @staticmethod
-    def get_image_name(url):
-        """
-        Extract the image name from the URL. This assumes the URL contains the image name at the end.
-        Example: https://example.com/images/image1.jpg -> image1.jpg
-        """
-        parsed_url = urlparse(url)
-        path_parts = parsed_url.path.split('/')
-        return path_parts[-2]
-
     def run(self,  posts_url_list, s3_obj,bucket_name='omh-media', s3_path_prefix='posts_media'):
         """
         Runs the process to download images and upload to S3.
         """
         total_failed_downloads = 0
-        for image_url in posts_url_list: # Assuming your post object/dict has an 'image_url' field
+        for image_id, image_url, platform_name  in posts_url_list: # Assuming your post object/dict has an 'image_url' field
             if image_url:
                 # Download the image
                 image_data = self.download_image(image_url)
 
                 if image_data:
                     # Get the image name
-                    image_name = self.get_image_name(image_url)
+                    image_name = f"{platform_name}_{image_id}"
 
                     # Define the S3 path prefix
                     key = f"{s3_path_prefix}/{image_name}.jpg"
@@ -63,10 +53,6 @@ class ImageDownloader:
 
         print(f"Total failed downloads: {total_failed_downloads} out of {len(posts_url_list)}")
 
-
-if __name__ == "__main__":
-    downloader = ImageDownloader()
-    downloader.run()
 
 
 class PostUtils:
