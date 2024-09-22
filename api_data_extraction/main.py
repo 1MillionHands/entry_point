@@ -65,6 +65,8 @@ class ExtractScooperData:
         # Create an S3 client
         s3 = boto3.client("s3")
 
+        print('the is the source url dict', self.source_url_dict)
+
         # Iterate over the URLs and upload the data to S3
         for name, url in self.source_url_dict.items():
             print(f"Uploading {name} data to S3...")
