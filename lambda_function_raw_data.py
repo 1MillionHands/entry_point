@@ -46,12 +46,11 @@ def lambda_handler(event, context):
     if custom_payload == None:
         raise Exception("Invalid event structure")
 
-    if custom_payload["test_env_status"]:
-        obj = EventHandler()
-        pyload = obj.run(custom_payload)
-        print(pyload)
-    else:
-        print("success")
+    env_msg = 'test' if custom_payload["test_env_status"] else 'prod'
+    print(f'The program running in {env_msg} mode')
+
+    obj = EventHandler()
+    pyload = obj.run(custom_payload)
 
     if pyload:
         return {
