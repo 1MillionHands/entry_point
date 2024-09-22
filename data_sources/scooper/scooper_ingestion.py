@@ -8,9 +8,8 @@ from data_sources.scooper.table_object import ScooperRowData, Utils
 from DB_Manager_EP.table_handler import TableHandler
 from datetime import datetime
 from pytz import timezone
+from data_sources.utils import ScooperUtils
 
-JSON_ENTRY_KEY = 'result_attributes'
-DATATIME_LIST = ['search_indexed_datetime', 'indexed_datetime', 'published_datetime']
 
 
 class ScooperIngestion(TableHandler):
@@ -43,32 +42,32 @@ class ScooperIngestion(TableHandler):
     def extract_data(self):
 
         obj = self.s3object._read_file_from_s3(self.bucket, self.key)
-        if obj:
-            data = obj.get()['Body'].read().decode('utf-8')
-            decoder = json.JSONDecoder()
+        data = obj.get()['Body'].read().decode('utf-8')
+        decoder = json.JSONDecoder()
 
-            pos = 0
-            while pos < len(data):
-                try:
-                    obj, pos = decoder.raw_decode(data, pos)
-                    # Do something with obj
-                    print(obj)
-                except json.JSONDecodeError as e:
-                    print(f"Error decoding JSON: {str(e)}")
-                    break
+        pos = 0
+        while pos < len(data):
+            try:
+                obj, pos = decoder.raw_decode(data, pos)
+                # Do something with obj
+                print(obj)
+            except json.JSONDecodeError as e:
+                print(f"Error decoding JSON: {str(e)}")
+                break
 
+        if obj[0][ScooperUtils.DATA_ENTRIES_KEY]:
             self.json_data = obj
         else:
-            raise Exception("Error reading data from s3 - could be file is empty")
+            raise Exception(f"ERROR: reading data from s3. Hint: could be the the file is empty. Check {self.key}")
 
     def transform(self):
         print("Transforming data...")
-        entries = [entry[JSON_ENTRY_KEY] for entry in self.json_data[0]['entries']]
+        entries = [entry[ScooperUtils.JSON_ENTRY_KEY] for entry in self.json_data[0][ScooperUtils.DATA_ENTRIES_KEY]]
 
         self.df_data = pd.DataFrame(entries)
         self.set_new_columns()
 
-        self.df_data[DATATIME_LIST] = self.transform_datetime_cols(self.df_data[DATATIME_LIST])
+        self.df_data[ScooperUtils.DATATIME_LIST] = self.transform_datetime_cols(self.df_data[ScooperUtils.DATATIME_LIST])
 
         string_na_fields = [field for field in self.df_data.columns if field not in Utils.NUMERIC_FIELDS]
         self.df_data[string_na_fields] = self.df_data[string_na_fields].replace({np.nan: None})
