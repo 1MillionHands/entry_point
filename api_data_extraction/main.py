@@ -59,7 +59,7 @@ class ExtractScooperData:
                 raise Exception("given key wasn't found in the class util 'source_url_dict'")
             else:
                 dict_[url] = url_res
-            return dict_
+        return dict_
 
     def run(self):
         # Create an S3 client
