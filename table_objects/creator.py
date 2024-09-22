@@ -35,10 +35,12 @@ class CreatorHandler(TableHandler):
 
         if creator is not None:
             # update creators
+            print(f"inserting {len(creator)} amount of rows in creator")
             self.update_db_insert(Creatort, creator)
 
         if creator_history is not None:
             # update creators history
+            print(f"inserting {len(creator_history)} amount of rows in creator_history")
             self.update_db_delete_insert(CreatorHistoryt, creator_history, CreatorUtils.INGESTION_TIMESTAMP_FIELD,
                                          [self.timestamp_partition_id])
 
