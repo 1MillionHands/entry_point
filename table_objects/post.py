@@ -98,7 +98,6 @@ class PostHandler(TableHandler):
         self.df_data.dropna(subset=['parent_url'], inplace=True)
         self.df_data.dropna(subset=['media_url'], inplace=True)
         self.df_data = self.df_data.dropna(how='all')
-        self.df_data = self.df_data.dropna(subset=CreatorUtils.primary_key)
 
         # Adjust creator_id
         self.validate_creator_id()
@@ -164,6 +163,7 @@ class PostHandler(TableHandler):
     def validate_creator_id(self):
 
         self.df_data[PostUtils.PLATFORM] = self.df_data.media_url.apply(lambda x: self.extract_platform_name(x))
+        self.df_data = self.df_data.dropna(subset=CreatorUtils.primary_key)
         filters = [
             {
                 "column": PostUtils.CREATOR_NAME,
