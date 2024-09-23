@@ -96,6 +96,9 @@ class PostHandler(TableHandler):
 
         # drop rows with nan values from url parent
         self.df_data.dropna(subset=['parent_url'], inplace=True)
+        self.df_data.dropna(subset=['media_url'], inplace=True)
+        self.df_data = self.df_data.dropna(how='all')
+        self.df_data = self.df_data.dropna(subset=CreatorUtils.primary_key)
 
         # Adjust creator_id
         self.validate_creator_id()

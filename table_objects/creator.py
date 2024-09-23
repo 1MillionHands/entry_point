@@ -102,7 +102,8 @@ class CreatorHandler(TableHandler):
             new_creators['indicator'] = True
             new_creators = new_creators.copy()
         else:
-
+            existing_creators.platform_type = existing_creators.platform_type.apply(lambda x: x.name)
+            existing_creators.drop_duplicates(subset=CreatorUtils.primary_key, inplace=True)
             new_creators = self.df_data.merge(existing_creators, how='left', on=CreatorUtils.primary_key)
 
             if new_creators['creator_id_y'].isnull().sum() == 0:
