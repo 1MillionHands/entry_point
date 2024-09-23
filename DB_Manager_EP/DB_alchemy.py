@@ -47,7 +47,7 @@ class DbService:
 
         # Define the database connection URL
         DATABASE_URL = f'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?options=-csearch_path%3D{SCHEMA}'
-        print("Connecting to DB with URL:", DATABASE_URL)
+        print("Connecting to DB with URL:")
         # Create a SQLAlchemy engine
         engine = create_engine(DATABASE_URL)
         return engine
@@ -465,25 +465,25 @@ class DbService:
 
         return df_discrepancies
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 # from db_table_objects import Post, Creatort, CreatorHistoryt, PostHistory,Volunteer, Base
 #
 
     # Get the absolute path to the current script
-    current_dir = os.path.dirname(__file__)
-    print("1",current_dir)
+    # current_dir = os.path.dirname(__file__)
+    # print("1",current_dir)
 
     # Construct the path to the config file relative to the current script
-    config_path = os.path.join(current_dir, '../config_file.json')
-    print("3",config_path)
+    # config_path = os.path.join(current_dir, '../config_file.json')
+    # print("3",config_path)
 
     # Normalize the path (handles symbolic links, etc.)
-    config_path = os.path.normpath(config_path)
-    print("1",config_path)
+    # config_path = os.path.normpath(config_path)
+    # print("1",config_path)
 
     # is_test=False
     # ob = DbService(is_test)
-    print("success")
+    # print("success")
 # df = ob.get_schema_comparison()
 # print(df)
 
