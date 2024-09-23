@@ -134,6 +134,8 @@ class CreatorHandler(TableHandler):
 
     def set_create_history_id(self, creators):
 
+        self.df_data.reset_index(drop=True, inplace=True)
+
         # Create mask to self.df_data that with the creator platform type and name.
         mask = self.df_data['name'].isin(creators['name']) & self.df_data['platform_type'].isin(creators['platform_type'])
 
