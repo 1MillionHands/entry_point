@@ -20,11 +20,17 @@ phases:
       # Zip the entire directory including all files and folders
       - zip -r9 load_raw_data_lambda_pack.zip data_sources DB_Manager_EP requirements.txt lambda_function_raw_data.py config_file.json
 
-      # Second Package: Packaging everything
+      # third Package: Packaging everything
       - echo "Packaging Lambda function 3 (all files)..."
       - mkdir full_lambda_package
       # Zip the entire directory including all files and folders
       - zip -r9 full_lambda_package.zip data_sources DB_Manager_EP table_objects requirements.txt lambda_function_db.py config_file.json
+      -
+      # fourth Package: Packaging everything
+      - echo "Packaging Lambda function 3 (all files)..."
+      - mkdir scoring_package
+      # Zip the entire directory including all files and folders
+      - zip -r9 scoring_package.zip data_sources DB_Manager_EP.DB_alchemy.py table_objects data_enrichment lambda_function_db.py config_file.json
 
   post_build:
     commands:
@@ -38,4 +44,8 @@ phases:
 
       - echo Deploying Lambda function 3...
       - aws lambda update-function-code --function-name BiDataProcessLevel --zip-file fileb://full_lambda_package.zip
+      - echo "DONE!!"
+
+      - echo Deploying Lambda function 4...
+      - aws lambda update-function-code --function-name PostScoring --zip-file fileb://scoring_package.zip
       - echo "DONE!!"

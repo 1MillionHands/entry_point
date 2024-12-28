@@ -54,14 +54,15 @@ class PostHandler(TableHandler):
     def run_from_circle(self):
         pass
 
-    def query_raw_data(self):
-        filters = [
-            {
-                "column": PostUtils.INGESTION_TIMESTAMP_FIELD,
-                "values": [self.timestamp_partition_id],
-                "op": "in"
-            }
-        ]
+    def query_raw_data(self, filters=None):
+        if filters is not None:
+            filters = [
+                {
+                    "column": PostUtils.INGESTION_TIMESTAMP_FIELD,
+                    "values": [self.timestamp_partition_id],
+                    "op": "in"
+                }
+            ]
         tbl_result = self.db_obj.query_table_orm(ScooperRowData, filters=filters, to_df=True)
         if tbl_result[0] is None:
             return None

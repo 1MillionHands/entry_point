@@ -337,8 +337,49 @@ class DbService:
                 session.rollback()
                 raise e
 
-    def update_table(self, table_name, content, headers):
-        pass
+    def update_table(self, table_name, df, key_column, update_column):
+        """
+        Updates rows in a table based on a DataFrame containing keys and update values.
+
+        Args:
+            table_name (str): Name of the table to update.
+            df (pandas.DataFrame): DataFrame containing the key and update value.
+            key_column (str): Name of the key column in both the DataFrame and the table.
+            update_column (str): Name of the column to update in the table.
+
+        Raises:
+            ValueError: If the key or update columns are not found in the DataFrame or table.
+            Exception: For any other exceptions that occur during the update.
+        """
+        with self.get_db() as session:
+            try:
+                table = inspect(self.engine).tables[table_name]
+
+                if key_column not in df.columns or update_column not in df.columns:
+                    raise ValueError("Key or update column not found in DataFrame.")
+
+                if key_column not in table.columns or update_column not in table.columns:
+                    raise ValueError("Key or update column not found in table.")
+
+                for index, row in df.iterrows():
+                    key_value = row[key_column]
+                    update_value = row[update_column]
+
+                    # Correct usage: Use a dictionary ONLY for the update values
+                    update_data = {update_column: update_value}
+
+                    # Construct filter criteria separately
+                    filter_criteria = {key_column: key_value}
+
+                    session.query(table).filter_by(**filter_criteria).update(update_data)  # Correct Usage
+
+                session.commit()
+
+
+            except (ValueError, Exception) as e:
+                session.rollback()  # Important: Rollback on error
+                print(f"Error during update: {str(e)}")
+                raise
 
     def run_query(self):
         # self.engine.
