@@ -293,8 +293,6 @@ class DbService:
         """
         with self.engine.connect() as connection:
             try:
-                if not sql_statement.strip().lower().startswith('select'):
-                    raise ValueError("Only SELECT statements are allowed.")
                 # Convert string to a SQLAlchemy text object
                 stmt = text(sql_statement)
 
@@ -338,22 +336,15 @@ class DbService:
                 raise e
 
     def update_table(self, table_name, df, key_column, update_column):
-        """
-        Updates rows in a table based on a DataFrame containing keys and update values.
-
-        Args:
-            table_name (str): Name of the table to update.
-            df (pandas.DataFrame): DataFrame containing the key and update value.
-            key_column (str): Name of the key column in both the DataFrame and the table.
-            update_column (str): Name of the column to update in the table.
-
-        Raises:
-            ValueError: If the key or update columns are not found in the DataFrame or table.
-            Exception: For any other exceptions that occur during the update.
-        """
+        """Updates rows in a table based on a DataFrame."""
         with self.get_db() as session:
             try:
-                table = inspect(self.engine).tables[table_name]
+                inspector = inspect(self.engine)  # Get the inspector
+                if not inspector.has_table(table_name, schema=self.SCHEMA):  # Check if table exists
+                    raise ValueError(f"Table '{table_name}' does not exist.")
+
+                table = Table(table_name, MetaData(), autoload_with=self.engine,
+                              schema=self.SCHEMA)  # Get the table object
 
                 if key_column not in df.columns or update_column not in df.columns:
                     raise ValueError("Key or update column not found in DataFrame.")
@@ -365,19 +356,15 @@ class DbService:
                     key_value = row[key_column]
                     update_value = row[update_column]
 
-                    # Correct usage: Use a dictionary ONLY for the update values
                     update_data = {update_column: update_value}
-
-                    # Construct filter criteria separately
                     filter_criteria = {key_column: key_value}
 
-                    session.query(table).filter_by(**filter_criteria).update(update_data)  # Correct Usage
+                    session.query(table).filter_by(**filter_criteria).update(update_data)
 
                 session.commit()
 
-
             except (ValueError, Exception) as e:
-                session.rollback()  # Important: Rollback on error
+                session.rollback()
                 print(f"Error during update: {str(e)}")
                 raise
 

@@ -20,6 +20,7 @@ def compile_event_payload(event):
 
     else:
         new_event = None
+        return new_event
 
 
 def lambda_handler(event, context):
@@ -34,12 +35,12 @@ def lambda_handler(event, context):
     print(f'The program running in {env_msg} mode')
 
     obj = EventHandler()
-    pyload = obj.run(custom_payload)
+    obj.run(custom_payload)
     return {
         'statusCode': 200,  # HTTP status code
         'headers': {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
         },
-        'body': pyload
+        'body': custom_payload
     }

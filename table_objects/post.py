@@ -55,7 +55,9 @@ class PostHandler(TableHandler):
         pass
 
     def query_raw_data(self, filters=None):
-        if filters is not None:
+        if filters == 'all':
+            filters = None
+        else:
             filters = [
                 {
                     "column": PostUtils.INGESTION_TIMESTAMP_FIELD,
