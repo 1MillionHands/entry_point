@@ -30,7 +30,7 @@ phases:
       - echo "Packaging Lambda function 3 (all files)..."
       - mkdir scoring_package
       # Zip the entire directory including all files and folders
-      - zip -r9 scoring_package.zip data_sources DB_Manager_EP.DB_alchemy.py table_objects data_enrichment lambda_function_db.py config_file.json
+      - zip -r9 scoring_package.zip DB_Manager_EP table_objects data_enrichment lambda_function_post_scoring.py config_file.json
 
   post_build:
     commands:
