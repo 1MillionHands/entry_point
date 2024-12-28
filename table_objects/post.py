@@ -124,7 +124,7 @@ class PostHandler(TableHandler):
             self.df_data = self.df_data[~self.df_data.url.isin(existing_posts.url)]
 
             # create new post_id columns and generate at random
-            self.df_data['post_id'] = [str(uuid.uuid4()) for x in range(self.df_data.shape[0])]
+            self.df_data[PostUtils.POST_ID] = [str(uuid.uuid4()) for x in range(self.df_data.shape[0])]
 
             new_posts = self.df_data.copy()
 
