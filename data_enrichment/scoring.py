@@ -57,12 +57,12 @@ def score_all(posts: pd.DataFrame):
     # reset_current_scrape_results()
     # set_scraped_start_time()
     posts['pro_israel'] = posts['sentiment'].apply(sentiment_adjustment)
-    posts['publish_date'] = pd.to_datetime(posts['publish_date'])
-    posts['publish_date'] = pd.to_datetime(posts['publish_date'], errors='coerce')
+    posts['created_at'] = pd.to_datetime(posts['created_at'])
+    posts['created_at'] = pd.to_datetime(posts['created_at'], errors='coerce')
 
-    posts['is_new'] = posts['publish_date'].apply(lambda x: is_within_last_n_hours_vectorized(x, hours=3))
+    posts['is_new'] = posts['created_at'].apply(lambda x: is_within_last_n_hours_vectorized(x, hours=3))
 
-    posts = posts[['post_id', 'platform_type', 'url', 'sentiment', 'pro_israel', 'publish_date', 'post_engagement', 'is_new']]
+    posts = posts[['post_id', 'platform_type', 'url', 'sentiment', 'pro_israel', 'created_at', 'post_engagement', 'is_new']]
     scored_posts = posts.apply(
         lambda row: score_a_post(row), axis=1)
     scored_posts.sort_values(['virality_score'], inplace=True, ascending=False)
@@ -103,7 +103,7 @@ def score_by_date(post, eng_, is_new):
     return post, virality_score, eng_
 
 
-def is_within_last_n_hours_vectorized(publish_date,  hours=3):
+def is_within_last_n_hours_vectorized(created_at,  hours=3):
     """
     Checks if datetimes in a DataFrame column are within the last N hours.
 
@@ -125,15 +125,15 @@ def is_within_last_n_hours_vectorized(publish_date,  hours=3):
     est = pytz.timezone('US/Eastern')
     curr_timestamp_utc = datetime.now(est).astimezone(pytz.utc)
 
-    if pd.isna(publish_date):
+    if pd.isna(created_at):
         return False
 
-    if publish_date.tz is None:  # Check if tz-naive
-        publish_date_utc = publish_date.tz_localize('UTC')  # Localize to UTC
+    if created_at.tz is None:  # Check if tz-naive
+        created_at_utc = created_at.tz_localize('UTC')  # Localize to UTC
     else:
-        publish_date_utc = publish_date.astimezone(pytz.utc)
+        created_at_utc = created_at.astimezone(pytz.utc)
 
-    time_difference = curr_timestamp_utc - publish_date_utc
+    time_difference = curr_timestamp_utc - created_at_utc
     return time_difference <= pd.Timedelta(hours=hours)
 
 run({
